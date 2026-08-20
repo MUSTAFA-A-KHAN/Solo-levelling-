@@ -1,6 +1,5 @@
 package com.sololeveling.system.presentation.profile
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerAttributes
 import com.sololeveling.system.presentation.components.SystemPanel
+import com.sololeveling.system.presentation.components.AtmosphericBackground
 
 @Composable
 fun ProfileScreen(
@@ -24,15 +24,11 @@ fun ProfileScreen(
 ) {
     val player by viewModel.playerState.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-    ) {
+    AtmosphericBackground(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
@@ -84,7 +80,10 @@ fun IdentityPanel(player: Player) {
 
 @Composable
 fun AttributesPanel(attributes: PlayerAttributes, availablePoints: Int) {
-    SystemPanel(modifier = Modifier.fillMaxWidth()) {
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        borderColor = MaterialTheme.colorScheme.secondary
+    ) {
         Column {
             Text(
                 text = "ATTRIBUTES",

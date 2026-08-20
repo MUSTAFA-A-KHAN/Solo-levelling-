@@ -1,7 +1,5 @@
 package com.sololeveling.system.presentation.quest
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.presentation.components.SystemPanel
+import com.sololeveling.system.presentation.components.AtmosphericBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,53 +36,57 @@ fun QuestScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0f)
                 )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+        AtmosphericBackground(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
             ) {
-                TextButton(onClick = { showCompleted = false }) {
-                    Text(
-                        "ACTIVE (${activeQuests.size})",
-                        color = if (!showCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                TextButton(onClick = { showCompleted = true }) {
-                    Text(
-                        "COMPLETED (${completedQuests.size})",
-                        color = if (showCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            val displayList = if (showCompleted) completedQuests else activeQuests
-
-            if (displayList.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No quests found.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    items(displayList) { quest ->
-                        QuestItem(
-                            quest = quest,
-                            onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                    TextButton(onClick = { showCompleted = false }) {
+                        Text(
+                            "ACTIVE (${activeQuests.size})",
+                            color = if (!showCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.titleMedium
                         )
+                    }
+                    TextButton(onClick = { showCompleted = true }) {
+                        Text(
+                            "COMPLETED (${completedQuests.size})",
+                            color = if (showCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val displayList = if (showCompleted) completedQuests else activeQuests
+
+                if (displayList.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No quests found.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(displayList) { quest ->
+                            QuestItem(
+                                quest = quest,
+                                onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                            )
+                        }
                     }
                 }
             }
@@ -93,7 +96,10 @@ fun QuestScreen(
 
 @Composable
 fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
-    SystemPanel(modifier = Modifier.fillMaxWidth()) {
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        borderColor = if (quest.isCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+    ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -103,7 +109,7 @@ fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
                 Text(
                     text = "[${quest.type.name}] ${quest.title}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = if (quest.isCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "Rank: ${quest.difficulty.name}",
@@ -130,28 +136,32 @@ fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
                         text = "Progress: ${req.currentValue.toInt()} / ${req.targetValue.toInt()} ${req.activityType.name}",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "${(progressPercent * 100).toInt()}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (quest.isCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 LinearProgressIndicator(
                     progress = progressPercent,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                    color = if (quest.isCompleted) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
 
                 if (!quest.isCompleted) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = { onAddProgress(1.0) }, // Default increment for demo/manual addition
-                        modifier = Modifier.align(Alignment.End)
+                        modifier = Modifier.align(Alignment.End),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
                         Text("Add Progress")
                     }
@@ -171,7 +181,7 @@ fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
                 val attrs = quest.attributeRewards.entries.joinToString(", ") { "${it.value} ${it.key.name}" }
                 Text(
                     text = "+ $attrs",
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
