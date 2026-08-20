@@ -14,8 +14,6 @@ import javax.inject.Inject
 
 import com.sololeveling.system.data.health.HealthConnectManager
 import com.sololeveling.system.domain.usecase.ProgressionEngine
-import com.sololeveling.system.domain.usecase.QuestGenerator
-import com.sololeveling.system.domain.usecase.QuestSyncUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.time.LocalDate
@@ -25,8 +23,6 @@ import java.time.ZoneId
 class CommandCenterViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
     private val progressionEngine: ProgressionEngine,
-    private val questGenerator: QuestGenerator,
-    private val questSyncUseCase: QuestSyncUseCase,
     val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
@@ -37,10 +33,6 @@ class CommandCenterViewModel @Inject constructor(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            questGenerator.checkAndGenerateQuests()
-        }
-
         viewModelScope.launch {
             playerRepository.getPlayer().collectLatest { player ->
                 _playerState.value = player
@@ -83,9 +75,8 @@ class CommandCenterViewModel @Inject constructor(
             val workoutMinutes = healthConnectManager.getRecentWorkoutDurationMinutes(since)
 
             val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
-            playerRepository.updatePlayer(updatedPlayer)
 
-            questSyncUseCase.syncQuestsWithHealthData(steps, workoutMinutes)
+            playerRepository.updatePlayer(updatedPlayer)
         }
     }
 
