@@ -1,16 +1,20 @@
 package com.sololeveling.system.presentation.commandcenter
 
 import androidx.compose.foundation.background
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.PermissionController
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.presentation.components.SystemPanel
 
@@ -20,6 +24,24 @@ fun CommandCenterScreen(
     onNavigateToProfile: () -> Unit
 ) {
     val player by viewModel.playerState.collectAsState()
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        if (granted.containsAll(viewModel.healthConnectManager.requiredPermissions)) {
+            viewModel.syncHealthData()
+        }
+    }
+
+    LaunchedEffect(true) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is CommandCenterViewModel.UiEvent.RequestHealthPermissions -> {
+                    permissionLauncher.launch(event.permissions)
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -63,10 +85,10 @@ fun CommandCenterScreen(
             SystemPanel(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { viewModel.simulateActivity() }
+                    .clickable { viewModel.syncHealthData() }
             ) {
                 Text(
-                    text = "SIMULATE ACTIVITY (+25 XP)",
+                    text = "SYNC SYSTEM DATA (HEALTH CONNECT)",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
