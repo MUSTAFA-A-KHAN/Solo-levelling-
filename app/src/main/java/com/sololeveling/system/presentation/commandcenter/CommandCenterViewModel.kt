@@ -16,6 +16,8 @@ import com.sololeveling.system.data.health.HealthConnectManager
 import com.sololeveling.system.domain.usecase.ProgressionEngine
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import java.time.LocalDate
+import java.time.ZoneId
 
 @HiltViewModel
 class CommandCenterViewModel @Inject constructor(
@@ -57,8 +59,16 @@ class CommandCenterViewModel @Inject constructor(
                 return@launch
             }
 
-            // Sync data since the last tracked sync
-            val since = currentPlayer.lastSyncTime
+            // Sync data since the last tracked sync.
+            // If the user has 0 XP (just installed before the fix), fallback to the start of today
+            // so they don't miss out on today's earlier steps.
+            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val since = if (currentPlayer.xp == 0L && currentPlayer.lastSyncTime > startOfDay) {
+                startOfDay
+            } else {
+                currentPlayer.lastSyncTime
+            }
+
             val now = System.currentTimeMillis()
 
             val steps = healthConnectManager.getRecentSteps(since)
