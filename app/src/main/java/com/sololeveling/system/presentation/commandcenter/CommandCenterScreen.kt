@@ -21,8 +21,7 @@ import com.sololeveling.system.presentation.components.SystemPanel
 @Composable
 fun CommandCenterScreen(
     viewModel: CommandCenterViewModel = hiltViewModel(),
-    onNavigateToProfile: () -> Unit,
-    onNavigateToQuests: () -> Unit
+    onNavigateToProfile: () -> Unit
 ) {
     val player by viewModel.playerState.collectAsState()
 
@@ -65,20 +64,16 @@ fun CommandCenterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            SystemPanel(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNavigateToQuests() }
-            ) {
+            SystemPanel(modifier = Modifier.fillMaxWidth()) {
                 Column {
                     Text(
-                        text = "QUEST LOG",
+                        text = "DAILY QUESTS",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "View active and completed quests.",
+                        text = "No active quests.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
