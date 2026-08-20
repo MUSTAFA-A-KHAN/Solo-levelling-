@@ -12,12 +12,16 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.sololeveling.system.data.health.HealthConnectManager
 import com.sololeveling.system.domain.usecase.ProgressionEngine
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 @HiltViewModel
 class CommandCenterViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
-    private val progressionEngine: ProgressionEngine
+    private val progressionEngine: ProgressionEngine,
+    val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
     private val _playerState = MutableStateFlow<Player?>(null)
@@ -41,16 +45,32 @@ class CommandCenterViewModel @Inject constructor(
         }
     }
 
-    fun simulateActivity() {
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
+    fun syncHealthData() {
         viewModelScope.launch {
             val currentPlayer = _playerState.value ?: return@launch
-            // Simulate gaining 25 XP from an activity
-            val updatedPlayer = progressionEngine.addXp(currentPlayer, 25)
-            // Re-evaluate rank just in case
-            val newRank = progressionEngine.evaluateRank(updatedPlayer)
-            val finalPlayer = updatedPlayer.copy(rank = newRank)
 
-            playerRepository.updatePlayer(finalPlayer)
+            if (!healthConnectManager.hasAllPermissions()) {
+                _uiEvent.emit(UiEvent.RequestHealthPermissions(healthConnectManager.requiredPermissions))
+                return@launch
+            }
+
+            // Sync data since the last tracked sync
+            val since = currentPlayer.lastSyncTime
+            val now = System.currentTimeMillis()
+
+            val steps = healthConnectManager.getRecentSteps(since)
+            val workoutMinutes = healthConnectManager.getRecentWorkoutDurationMinutes(since)
+
+            val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
+
+            playerRepository.updatePlayer(updatedPlayer)
         }
+    }
+
+    sealed class UiEvent {
+        data class RequestHealthPermissions(val permissions: Set<String>) : UiEvent()
     }
 }
