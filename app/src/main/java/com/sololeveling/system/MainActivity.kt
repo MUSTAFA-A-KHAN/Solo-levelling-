@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
 import com.sololeveling.system.presentation.profile.ProfileScreen
+import com.sololeveling.system.presentation.quest.QuestScreen
 import com.sololeveling.system.presentation.theme.SystemTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -56,11 +57,17 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("command_center") {
                             CommandCenterScreen(
-                                onNavigateToProfile = { navController.navigate("profile") }
+                                onNavigateToProfile = { navController.navigate("profile") },
+                                onNavigateToQuests = { navController.navigate("quests") }
                             )
                         }
                         composable("profile") {
                             ProfileScreen(
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("quests") {
+                            QuestScreen(
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
