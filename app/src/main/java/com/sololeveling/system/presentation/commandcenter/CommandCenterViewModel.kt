@@ -18,25 +18,43 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.time.LocalDate
 import java.time.ZoneId
+import com.sololeveling.system.domain.model.Quest
+import com.sololeveling.system.domain.repository.QuestRepository
+import com.sololeveling.system.domain.usecase.QuestEngine
 
 @HiltViewModel
 class CommandCenterViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
     private val progressionEngine: ProgressionEngine,
+    private val questEngine: QuestEngine,
+    private val questRepository: QuestRepository,
     val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
     private val _playerState = MutableStateFlow<Player?>(null)
     val playerState: StateFlow<Player?> = _playerState.asStateFlow()
 
+    private val _activeQuests = MutableStateFlow<List<Quest>>(emptyList())
+    val activeQuests: StateFlow<List<Quest>> = _activeQuests.asStateFlow()
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
         viewModelScope.launch {
-            playerRepository.getPlayer().collectLatest { player ->
-                _playerState.value = player
-                _isLoading.value = false
+            questEngine.generateDailyQuestsIfNeeded()
+
+            launch {
+                playerRepository.getPlayer().collectLatest { player ->
+                    _playerState.value = player
+                    _isLoading.value = false
+                }
+            }
+
+            launch {
+                questRepository.getActiveQuests().collectLatest { quests ->
+                    _activeQuests.value = quests
+                }
             }
         }
     }
@@ -76,7 +94,13 @@ class CommandCenterViewModel @Inject constructor(
 
             val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
 
-            playerRepository.updatePlayer(updatedPlayer)
+            // Process quest completion using absolute today totals
+            val todaySteps = healthConnectManager.getTodaySteps()
+            val todayWorkoutMinutes = healthConnectManager.getTodayWorkoutDurationMinutes()
+
+            val finalPlayer = questEngine.evaluateQuests(updatedPlayer, todaySteps.toDouble(), todayWorkoutMinutes.toDouble())
+
+            playerRepository.updatePlayer(finalPlayer)
         }
     }
 

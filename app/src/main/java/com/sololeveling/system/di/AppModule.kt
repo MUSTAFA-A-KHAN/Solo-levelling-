@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.room.Room
 import com.sololeveling.system.data.local.SystemDatabase
 import com.sololeveling.system.data.local.dao.PlayerDao
+import com.sololeveling.system.data.local.dao.QuestDao
 import com.sololeveling.system.data.repository.PlayerRepositoryImpl
+import com.sololeveling.system.data.repository.QuestRepositoryImpl
 import com.sololeveling.system.domain.repository.PlayerRepository
+import com.sololeveling.system.domain.repository.QuestRepository
 import com.sololeveling.system.domain.usecase.ProgressionEngine
 import dagger.Module
 import dagger.Provides
@@ -34,13 +37,32 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideQuestDao(db: SystemDatabase): QuestDao = db.questDao
+
+    @Provides
+    @Singleton
     fun providePlayerRepository(playerDao: PlayerDao): PlayerRepository {
         return PlayerRepositoryImpl(playerDao)
     }
 
     @Provides
     @Singleton
+    fun provideQuestRepository(questDao: QuestDao): QuestRepository {
+        return QuestRepositoryImpl(questDao)
+    }
+
+    @Provides
+    @Singleton
     fun provideProgressionEngine(): ProgressionEngine {
         return ProgressionEngine()
+    }
+
+    @Provides
+    @Singleton
+    fun provideQuestEngine(
+        questRepository: QuestRepository,
+        progressionEngine: ProgressionEngine
+    ): com.sololeveling.system.domain.usecase.QuestEngine {
+        return com.sololeveling.system.domain.usecase.QuestEngine(questRepository, progressionEngine)
     }
 }

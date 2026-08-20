@@ -29,7 +29,7 @@ class HealthConnectManager @Inject constructor(
     }
 
     private fun isAvailable(): Boolean {
-        return HealthConnectClient.sdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
+        return HealthConnectClient.getSdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
     }
 
     suspend fun getRecentSteps(since: Long): Long {
@@ -49,6 +49,37 @@ class HealthConnectManager @Inject constructor(
         if (!hasAllPermissions()) return 0
 
         val timeRange = TimeRangeFilter.after(Instant.ofEpochMilli(since))
+        val response = healthConnectClient.readRecords(
+            ReadRecordsRequest(
+                recordType = ExerciseSessionRecord::class,
+                timeRangeFilter = timeRange
+            )
+        )
+
+        // Sum durations in minutes
+        return response.records.sumOf { record ->
+            val durationMs = record.endTime.toEpochMilli() - record.startTime.toEpochMilli()
+            durationMs / (1000 * 60)
+        }
+    }
+
+    suspend fun getTodaySteps(): Long {
+        if (!hasAllPermissions()) return 0
+        val startOfDay = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+        val timeRange = TimeRangeFilter.after(startOfDay)
+        val response = healthConnectClient.readRecords(
+            ReadRecordsRequest(
+                recordType = StepsRecord::class,
+                timeRangeFilter = timeRange
+            )
+        )
+        return response.records.sumOf { it.count }
+    }
+
+    suspend fun getTodayWorkoutDurationMinutes(): Long {
+        if (!hasAllPermissions()) return 0
+        val startOfDay = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+        val timeRange = TimeRangeFilter.after(startOfDay)
         val response = healthConnectClient.readRecords(
             ReadRecordsRequest(
                 recordType = ExerciseSessionRecord::class,
