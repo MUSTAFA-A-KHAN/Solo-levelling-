@@ -46,16 +46,12 @@ fun SystemPanel(
     val cornerRadius = 20.dp
     val shape = RoundedCornerShape(cornerRadius)
 
-    // 45-60% translucent dark surface
-    val panelColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+    // Authentic glassmorphism: 10-20% alpha for frosted finish
+    val panelColor = Color.White.copy(alpha = 0.15f)
 
-    // 16-24dp backdrop blur for glassmorphism
-    val blurRadius = 20.dp
-    val blurModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        Modifier.blur(radius = blurRadius, edgeTreatment = BlurredEdgeTreatment.Unbounded)
-    } else {
-        Modifier
-    }
+    val blurEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        BlurEffect(radiusX = 20f, radiusY = 20f, edgeTreatment = TileMode.Clamp)
+    } else null
 
     Box(modifier = modifier) {
         // Background layer with blur and glow effects
@@ -90,22 +86,33 @@ fun SystemPanel(
                     }
                 }
                 .clip(shape)
-                .then(blurModifier)
+                .then(
+                    if (blurEffect != null) {
+                        Modifier.graphicsLayer {
+                            renderEffect = blurEffect
+                        }
+                    } else Modifier
+                )
                 .background(panelColor)
                 // Subtle cyan/purple glass tint
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            SystemNeonBlue.copy(alpha = 0.03f),
-                            SystemNeonPurple.copy(alpha = 0.03f)
+                            SystemNeonBlue.copy(alpha = 0.05f),
+                            SystemNeonPurple.copy(alpha = 0.05f)
                         )
                     )
                 )
                 .drawBehind {
                     val cornerPx = cornerRadius.toPx()
-                    // Thin 1dp translucent inner border
+                    // 1dp gradient border, simulating light catching the edge of glass
                     drawRoundRect(
-                        color = borderColor.copy(alpha = 0.3f),
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.6f),
+                                Color.White.copy(alpha = 0.1f)
+                            )
+                        ),
                         size = size,
                         cornerRadius = CornerRadius(cornerPx, cornerPx),
                         style = Stroke(width = borderWidth.toPx())

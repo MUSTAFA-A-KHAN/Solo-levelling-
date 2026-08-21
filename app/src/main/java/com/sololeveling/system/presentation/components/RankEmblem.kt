@@ -39,8 +39,8 @@ fun RankEmblem(
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val width = size.toPx()
-            val height = size.toPx()
+            val width = this.size.width
+            val height = this.size.height
 
             // Draw a futuristic hexagon
             val path = Path().apply {
