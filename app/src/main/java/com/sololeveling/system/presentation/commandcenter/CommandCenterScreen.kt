@@ -93,8 +93,7 @@ fun CommandCenterScreen(
                 SystemPanel(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { onNavigateToQuests() },
-                    cutoutSize = 8.dp
+                        .clickable { onNavigateToQuests() }
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -115,8 +114,7 @@ fun CommandCenterScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { viewModel.syncHealthData() },
-                    borderColor = MaterialTheme.colorScheme.secondary,
-                    cutoutSize = 8.dp
+                    borderColor = MaterialTheme.colorScheme.secondary
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(

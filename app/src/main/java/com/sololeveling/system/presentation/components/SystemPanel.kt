@@ -2,9 +2,9 @@ package com.sololeveling.system.presentation.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -13,12 +13,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sololeveling.system.presentation.theme.SystemNeonBlue
+import com.sololeveling.system.presentation.theme.SystemNeonPurple
 import android.os.Build
 
 @Composable
@@ -26,47 +28,31 @@ fun SystemPanel(
     modifier: Modifier = Modifier,
     borderColor: Color = SystemNeonBlue,
     borderWidth: Dp = 1.dp,
-    cutoutSize: Dp = 16.dp,
     content: @Composable () -> Unit
 ) {
-    // Subtle pulsing animation for the glow
+    // Soft, low-intensity glow animation
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val alphaAnim by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 0.8f,
+        initialValue = 0.15f,
+        targetValue = 0.35f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
+            animation = tween(3000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glow_alpha"
     )
 
-    // Custom shape with chamfered corners (sci-fi cutout)
-    val shape = object : Shape {
-        override fun createOutline(
-            size: androidx.compose.ui.geometry.Size,
-            layoutDirection: androidx.compose.ui.unit.LayoutDirection,
-            density: androidx.compose.ui.unit.Density
-        ): Outline {
-            val cutPx = with(density) { cutoutSize.toPx() }
-            val path = Path().apply {
-                moveTo(0f, cutPx)
-                lineTo(cutPx, 0f)
-                lineTo(size.width, 0f)
-                lineTo(size.width, size.height - cutPx)
-                lineTo(size.width - cutPx, size.height)
-                lineTo(0f, size.height)
-                close()
-            }
-            return Outline.Generic(path)
-        }
-    }
+    // 18-22dp rounded corners per requirements
+    val cornerRadius = 20.dp
+    val shape = RoundedCornerShape(cornerRadius)
 
-    val panelColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
+    // 45-60% translucent dark surface
+    val panelColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
 
-    // Add glass blur effect for newer Android versions, fallback to opacity for older
+    // 16-24dp backdrop blur for glassmorphism
+    val blurRadius = 20.dp
     val blurModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        Modifier.blur(radius = 16.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+        Modifier.blur(radius = blurRadius, edgeTreatment = BlurredEdgeTreatment.Unbounded)
     } else {
         Modifier
     }
@@ -77,21 +63,11 @@ fun SystemPanel(
             modifier = Modifier
                 .matchParentSize()
                 .drawBehind {
-                    val glowRadius = 16.dp.toPx()
+                    val glowRadius = 12.dp.toPx()
                     val strokeWidthPx = borderWidth.toPx()
-                    val cutPx = cutoutSize.toPx()
+                    val cornerPx = cornerRadius.toPx()
 
-                    val path = Path().apply {
-                        moveTo(0f, cutPx)
-                        lineTo(cutPx, 0f)
-                        lineTo(size.width, 0f)
-                        lineTo(size.width, size.height - cutPx)
-                        lineTo(size.width - cutPx, size.height)
-                        lineTo(0f, size.height)
-                        close()
-                    }
-
-                    // Outer Glow
+                    // Soft Outer Glow
                     val paint = Paint().asFrameworkPaint().apply {
                         color = borderColor.copy(alpha = alphaAnim).toArgb()
                         style = android.graphics.Paint.Style.STROKE
@@ -100,8 +76,13 @@ fun SystemPanel(
                     }
 
                     drawIntoCanvas { canvas ->
-                        canvas.drawPath(
-                            path = path,
+                        canvas.drawRoundRect(
+                            left = 0f,
+                            top = 0f,
+                            right = size.width,
+                            bottom = size.height,
+                            radiusX = cornerPx,
+                            radiusY = cornerPx,
                             paint = androidx.compose.ui.graphics.Paint().apply {
                                 asFrameworkPaint().set(paint)
                             }
@@ -111,30 +92,22 @@ fun SystemPanel(
                 .clip(shape)
                 .then(blurModifier)
                 .background(panelColor)
+                // Subtle cyan/purple glass tint
                 .background(
-                    brush = Brush.verticalGradient(
+                    brush = Brush.linearGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.08f),
-                            Color.Transparent,
-                            borderColor.copy(alpha = 0.05f)
+                            SystemNeonBlue.copy(alpha = 0.03f),
+                            SystemNeonPurple.copy(alpha = 0.03f)
                         )
                     )
                 )
                 .drawBehind {
-                    val cutPx = cutoutSize.toPx()
-                    val path = Path().apply {
-                        moveTo(0f, cutPx)
-                        lineTo(cutPx, 0f)
-                        lineTo(size.width, 0f)
-                        lineTo(size.width, size.height - cutPx)
-                        lineTo(size.width - cutPx, size.height)
-                        lineTo(0f, size.height)
-                        close()
-                    }
-                    // Crisp inner border
-                    drawPath(
-                        path = path,
-                        color = borderColor.copy(alpha = 0.7f),
+                    val cornerPx = cornerRadius.toPx()
+                    // Thin 1dp translucent inner border
+                    drawRoundRect(
+                        color = borderColor.copy(alpha = 0.3f),
+                        size = size,
+                        cornerRadius = CornerRadius(cornerPx, cornerPx),
                         style = Stroke(width = borderWidth.toPx())
                     )
                 }

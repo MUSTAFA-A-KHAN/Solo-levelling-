@@ -71,7 +71,7 @@ fun ProfileScreen(
 
 @Composable
 fun IdentityPanel(player: Player) {
-    SystemPanel(modifier = Modifier.fillMaxWidth(), cutoutSize = 16.dp) {
+    SystemPanel(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -138,8 +138,7 @@ fun IdentityPanel(player: Player) {
 fun AttributesPanel(attributes: PlayerAttributes, availablePoints: Int) {
     SystemPanel(
         modifier = Modifier.fillMaxWidth(),
-        borderColor = SystemNeonPurple,
-        cutoutSize = 16.dp
+        borderColor = SystemNeonPurple
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(

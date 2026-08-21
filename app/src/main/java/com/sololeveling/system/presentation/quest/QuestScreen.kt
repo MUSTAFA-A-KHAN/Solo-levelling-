@@ -138,8 +138,7 @@ fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
 
     SystemPanel(
         modifier = Modifier.fillMaxWidth(),
-        borderColor = borderColor,
-        cutoutSize = 12.dp
+        borderColor = borderColor
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Header
