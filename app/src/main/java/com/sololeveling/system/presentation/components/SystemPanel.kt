@@ -71,72 +71,78 @@ fun SystemPanel(
         Modifier
     }
 
-    Box(
-        modifier = modifier
-            .drawBehind {
-                val glowRadius = 16.dp.toPx()
-                val strokeWidthPx = borderWidth.toPx()
-                val cutPx = cutoutSize.toPx()
+    Box(modifier = modifier) {
+        // Background layer with blur and glow effects
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind {
+                    val glowRadius = 16.dp.toPx()
+                    val strokeWidthPx = borderWidth.toPx()
+                    val cutPx = cutoutSize.toPx()
 
-                val path = Path().apply {
-                    moveTo(0f, cutPx)
-                    lineTo(cutPx, 0f)
-                    lineTo(size.width, 0f)
-                    lineTo(size.width, size.height - cutPx)
-                    lineTo(size.width - cutPx, size.height)
-                    lineTo(0f, size.height)
-                    close()
+                    val path = Path().apply {
+                        moveTo(0f, cutPx)
+                        lineTo(cutPx, 0f)
+                        lineTo(size.width, 0f)
+                        lineTo(size.width, size.height - cutPx)
+                        lineTo(size.width - cutPx, size.height)
+                        lineTo(0f, size.height)
+                        close()
+                    }
+
+                    // Outer Glow
+                    val paint = Paint().asFrameworkPaint().apply {
+                        color = borderColor.copy(alpha = alphaAnim).toArgb()
+                        style = android.graphics.Paint.Style.STROKE
+                        strokeWidth = strokeWidthPx
+                        maskFilter = android.graphics.BlurMaskFilter(glowRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
+                    }
+
+                    drawIntoCanvas { canvas ->
+                        canvas.drawPath(
+                            path = path,
+                            paint = androidx.compose.ui.graphics.Paint().apply {
+                                asFrameworkPaint().set(paint)
+                            }
+                        )
+                    }
                 }
-
-                // Outer Glow
-                val paint = Paint().asFrameworkPaint().apply {
-                    color = borderColor.copy(alpha = alphaAnim).toArgb()
-                    style = android.graphics.Paint.Style.STROKE
-                    strokeWidth = strokeWidthPx
-                    maskFilter = android.graphics.BlurMaskFilter(glowRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
-                }
-
-                drawIntoCanvas { canvas ->
-                    canvas.drawPath(
+                .clip(shape)
+                .then(blurModifier)
+                .background(panelColor)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.08f),
+                            Color.Transparent,
+                            borderColor.copy(alpha = 0.05f)
+                        )
+                    )
+                )
+                .drawBehind {
+                    val cutPx = cutoutSize.toPx()
+                    val path = Path().apply {
+                        moveTo(0f, cutPx)
+                        lineTo(cutPx, 0f)
+                        lineTo(size.width, 0f)
+                        lineTo(size.width, size.height - cutPx)
+                        lineTo(size.width - cutPx, size.height)
+                        lineTo(0f, size.height)
+                        close()
+                    }
+                    // Crisp inner border
+                    drawPath(
                         path = path,
-                        paint = androidx.compose.ui.graphics.Paint().apply {
-                            asFrameworkPaint().set(paint)
-                        }
+                        color = borderColor.copy(alpha = 0.7f),
+                        style = Stroke(width = borderWidth.toPx())
                     )
                 }
-            }
-            .clip(shape)
-            .then(blurModifier)
-            .background(panelColor)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.08f),
-                        Color.Transparent,
-                        borderColor.copy(alpha = 0.05f)
-                    )
-                )
-            )
-            .drawBehind {
-                val cutPx = cutoutSize.toPx()
-                val path = Path().apply {
-                    moveTo(0f, cutPx)
-                    lineTo(cutPx, 0f)
-                    lineTo(size.width, 0f)
-                    lineTo(size.width, size.height - cutPx)
-                    lineTo(size.width - cutPx, size.height)
-                    lineTo(0f, size.height)
-                    close()
-                }
-                // Crisp inner border
-                drawPath(
-                    path = path,
-                    color = borderColor.copy(alpha = 0.7f),
-                    style = Stroke(width = borderWidth.toPx())
-                )
-            }
-            .padding(16.dp)
-    ) {
-        content()
+        )
+
+        // Content layer rendered sharply on top
+        Box(modifier = Modifier.padding(16.dp)) {
+            content()
+        }
     }
 }
