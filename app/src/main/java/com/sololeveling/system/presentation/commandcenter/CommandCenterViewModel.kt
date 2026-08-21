@@ -15,15 +15,25 @@ import javax.inject.Inject
 import com.sololeveling.system.data.health.HealthConnectManager
 import com.sololeveling.system.domain.usecase.ProgressionEngine
 import com.sololeveling.system.domain.usecase.QuestGenerator
+import com.sololeveling.system.domain.repository.QuestRepository
+import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.domain.usecase.QuestSyncUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.time.LocalDate
 import java.time.ZoneId
 
+data class DailyHealthData(
+    val steps: Long = 0,
+    val workoutMinutes: Long = 0,
+    val caloriesBurned: Double = 0.0,
+    val sleepMinutes: Long = 0
+)
+
 @HiltViewModel
 class CommandCenterViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
+    private val questRepository: QuestRepository,
     private val progressionEngine: ProgressionEngine,
     private val questGenerator: QuestGenerator,
     private val questSyncUseCase: QuestSyncUseCase,
@@ -32,6 +42,12 @@ class CommandCenterViewModel @Inject constructor(
 
     private val _playerState = MutableStateFlow<Player?>(null)
     val playerState: StateFlow<Player?> = _playerState.asStateFlow()
+
+    private val _activeQuests = MutableStateFlow<List<Quest>>(emptyList())
+    val activeQuests: StateFlow<List<Quest>> = _activeQuests.asStateFlow()
+
+    private val _dailyHealthData = MutableStateFlow(DailyHealthData())
+    val dailyHealthData: StateFlow<DailyHealthData> = _dailyHealthData.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -47,6 +63,28 @@ class CommandCenterViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+
+        viewModelScope.launch {
+            questRepository.getActiveQuests().collectLatest { quests ->
+                _activeQuests.value = quests
+            }
+        }
+
+        viewModelScope.launch {
+            fetchDailyHealthData()
+        }
+    }
+
+    private suspend fun fetchDailyHealthData() {
+        if (!healthConnectManager.hasAllPermissions()) return
+
+        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val steps = healthConnectManager.getRecentSteps(startOfDay)
+        val workoutMinutes = healthConnectManager.getRecentWorkoutDurationMinutes(startOfDay)
+        val calories = healthConnectManager.getRecentCaloriesBurned(startOfDay)
+        val sleepMinutes = healthConnectManager.getRecentSleepDurationMinutes(startOfDay)
+
+        _dailyHealthData.value = DailyHealthData(steps, workoutMinutes, calories, sleepMinutes)
     }
 
     fun completeAwakening() {
@@ -86,6 +124,8 @@ class CommandCenterViewModel @Inject constructor(
             playerRepository.updatePlayer(updatedPlayer)
 
             questSyncUseCase.syncQuestsWithHealthData(steps, workoutMinutes)
+
+            fetchDailyHealthData() // refresh the daily total shown on the dashboard
         }
     }
 

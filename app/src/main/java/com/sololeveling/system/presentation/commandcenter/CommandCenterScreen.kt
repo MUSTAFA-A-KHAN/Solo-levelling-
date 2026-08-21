@@ -3,20 +3,29 @@ package com.sololeveling.system.presentation.commandcenter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import com.sololeveling.system.domain.model.Player
-import com.sololeveling.system.presentation.components.SystemPanel
+import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.presentation.components.AtmosphericBackground
+import com.sololeveling.system.presentation.components.HolographicProgressBar
+import com.sololeveling.system.presentation.components.RankEmblem
+import com.sololeveling.system.presentation.components.SystemPanel
+import com.sololeveling.system.presentation.theme.*
 
 @Composable
 fun CommandCenterScreen(
@@ -25,6 +34,8 @@ fun CommandCenterScreen(
     onNavigateToQuests: () -> Unit
 ) {
     val player by viewModel.playerState.collectAsState()
+    val activeQuests by viewModel.activeQuests.collectAsState()
+    val dailyHealthData by viewModel.dailyHealthData.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = PermissionController.createRequestPermissionResultContract()
@@ -48,12 +59,23 @@ fun CommandCenterScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "SYSTEM ONLINE",
+                style = MaterialTheme.typography.displayMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
             Text(
                 text = "COMMAND CENTER",
-                style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 4.sp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -62,42 +84,63 @@ fun CommandCenterScreen(
                 PlayerSummaryPanel(p, onClick = onNavigateToProfile)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            SystemPanel(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNavigateToQuests() }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column {
-                    Text(
-                        text = "QUEST LOG",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "View active and completed quests.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                SystemPanel(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onNavigateToQuests() }
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "QUEST LOG",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${activeQuests.size} ACTIVE",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                SystemPanel(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { viewModel.syncHealthData() },
+                    borderColor = MaterialTheme.colorScheme.secondary
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "SYNC DATA",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "HEALTH CONNECT",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            SystemPanel(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { viewModel.syncHealthData() },
-                borderColor = MaterialTheme.colorScheme.secondary
-            ) {
-                Text(
-                    text = "SYNC SYSTEM DATA (HEALTH CONNECT)",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
+            HealthOverviewPanel(dailyHealthData)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            DailyQuestOverview(activeQuests)
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -105,34 +148,148 @@ fun CommandCenterScreen(
 @Composable
 fun PlayerSummaryPanel(player: Player, onClick: () -> Unit = {}) {
     SystemPanel(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RankEmblem(rank = player.rank, size = 72.dp)
+
+            Spacer(modifier = Modifier.width(20.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = player.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                player.title?.let { title ->
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = "LEVEL ${player.level}",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "${player.xp} / ${player.nextLevelXp} XP",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                val progress = if (player.nextLevelXp > 0) (player.xp.toFloat() / player.nextLevelXp.toFloat()) else 0f
+                HolographicProgressBar(progress = progress)
+            }
+        }
+    }
+}
+
+@Composable
+fun HealthOverviewPanel(data: DailyHealthData) {
+    SystemPanel(modifier = Modifier.fillMaxWidth()) {
         Column {
             Text(
-                text = "STATUS",
-                style = MaterialTheme.typography.labelMedium,
+                text = "TODAY's OVERVIEW",
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "LEVEL ${player.level}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "RANK ${player.rank.name}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                HealthStatMetric(label = "STEPS", value = data.steps.toString(), color = SystemNeonBlue)
+                HealthStatMetric(label = "ACTIVE", value = "${data.workoutMinutes}m", color = StatusSuccess)
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                HealthStatMetric(label = "CALORIES", value = "${data.caloriesBurned.toInt()} kcal", color = StatusWarning)
+                HealthStatMetric(label = "SLEEP", value = "${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m", color = SystemNeonPurple)
+            }
+        }
+    }
+}
+
+@Composable
+fun HealthStatMetric(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = color
+        )
+    }
+}
+
+@Composable
+fun DailyQuestOverview(quests: List<Quest>) {
+    val dailyQuests = quests.filter { it.type == com.sololeveling.system.domain.model.QuestType.DAILY }
+
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        borderColor = if (dailyQuests.isEmpty()) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondary
+    ) {
+        Column {
             Text(
-                text = "XP: ${player.xp} / ${player.nextLevelXp}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "DAILY QUESTS",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (dailyQuests.isEmpty()) {
+                Text(
+                    text = "No active daily quests. Wait for system reset.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                dailyQuests.forEach { quest ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = quest.title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        quest.requiredActivity?.let { req ->
+                            val progress = if (req.targetValue > 0) (req.currentValue / req.targetValue).toFloat().coerceIn(0f, 1f) else 0f
+                            Box(modifier = Modifier.width(100.dp)) {
+                                HolographicProgressBar(
+                                    progress = progress,
+                                    color = if (progress >= 1f) StatusSuccess else MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
