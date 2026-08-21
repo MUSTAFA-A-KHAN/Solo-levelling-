@@ -5,28 +5,28 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sololeveling.system.presentation.theme.SystemNeonBlue
+import android.os.Build
 
 @Composable
 fun SystemPanel(
     modifier: Modifier = Modifier,
     borderColor: Color = SystemNeonBlue,
     borderWidth: Dp = 1.dp,
+    cutoutSize: Dp = 16.dp,
     content: @Composable () -> Unit
 ) {
     // Subtle pulsing animation for the glow
@@ -41,32 +41,64 @@ fun SystemPanel(
         label = "glow_alpha"
     )
 
-    val shape = RoundedCornerShape(4.dp)
-    val panelColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-    val gradientColors = listOf(
-        Color.White.copy(alpha = 0.05f),
-        Color.Transparent
-    )
+    // Custom shape with chamfered corners (sci-fi cutout)
+    val shape = object : Shape {
+        override fun createOutline(
+            size: androidx.compose.ui.geometry.Size,
+            layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+            density: androidx.compose.ui.unit.Density
+        ): Outline {
+            val cutPx = with(density) { cutoutSize.toPx() }
+            val path = Path().apply {
+                moveTo(0f, cutPx)
+                lineTo(cutPx, 0f)
+                lineTo(size.width, 0f)
+                lineTo(size.width, size.height - cutPx)
+                lineTo(size.width - cutPx, size.height)
+                lineTo(0f, size.height)
+                close()
+            }
+            return Outline.Generic(path)
+        }
+    }
+
+    val panelColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
+
+    // Add glass blur effect for newer Android versions, fallback to opacity for older
+    val blurModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Modifier.blur(radius = 16.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+    } else {
+        Modifier
+    }
 
     Box(
         modifier = modifier
             .drawBehind {
                 val glowRadius = 16.dp.toPx()
                 val strokeWidthPx = borderWidth.toPx()
+                val cutPx = cutoutSize.toPx()
+
+                val path = Path().apply {
+                    moveTo(0f, cutPx)
+                    lineTo(cutPx, 0f)
+                    lineTo(size.width, 0f)
+                    lineTo(size.width, size.height - cutPx)
+                    lineTo(size.width - cutPx, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                }
+
+                // Outer Glow
                 val paint = Paint().asFrameworkPaint().apply {
                     color = borderColor.copy(alpha = alphaAnim).toArgb()
                     style = android.graphics.Paint.Style.STROKE
                     strokeWidth = strokeWidthPx
                     maskFilter = android.graphics.BlurMaskFilter(glowRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
                 }
+
                 drawIntoCanvas { canvas ->
-                    canvas.drawRoundRect(
-                        left = 0f,
-                        top = 0f,
-                        right = size.width,
-                        bottom = size.height,
-                        radiusX = 4.dp.toPx(),
-                        radiusY = 4.dp.toPx(),
+                    canvas.drawPath(
+                        path = path,
                         paint = androidx.compose.ui.graphics.Paint().apply {
                             asFrameworkPaint().set(paint)
                         }
@@ -74,15 +106,35 @@ fun SystemPanel(
                 }
             }
             .clip(shape)
+            .then(blurModifier)
             .background(panelColor)
             .background(
-                brush = Brush.verticalGradient(colors = gradientColors)
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.08f),
+                        Color.Transparent,
+                        borderColor.copy(alpha = 0.05f)
+                    )
+                )
             )
-            .border(
-                width = borderWidth,
-                color = borderColor.copy(alpha = 0.6f),
-                shape = shape
-            )
+            .drawBehind {
+                val cutPx = cutoutSize.toPx()
+                val path = Path().apply {
+                    moveTo(0f, cutPx)
+                    lineTo(cutPx, 0f)
+                    lineTo(size.width, 0f)
+                    lineTo(size.width, size.height - cutPx)
+                    lineTo(size.width - cutPx, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                }
+                // Crisp inner border
+                drawPath(
+                    path = path,
+                    color = borderColor.copy(alpha = 0.7f),
+                    style = Stroke(width = borderWidth.toPx())
+                )
+            }
             .padding(16.dp)
     ) {
         content()
