@@ -1,6 +1,5 @@
 package com.sololeveling.system.presentation.commandcenter
 
-import androidx.compose.foundation.background
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.presentation.components.SystemPanel
+import com.sololeveling.system.presentation.components.AtmosphericBackground
 
 @Composable
 fun CommandCenterScreen(
@@ -44,13 +44,12 @@ fun CommandCenterScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    AtmosphericBackground(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
             Text(
                 text = "COMMAND CENTER",
                 style = MaterialTheme.typography.displayMedium,
@@ -90,12 +89,13 @@ fun CommandCenterScreen(
             SystemPanel(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { viewModel.syncHealthData() }
+                    .clickable { viewModel.syncHealthData() },
+                borderColor = MaterialTheme.colorScheme.secondary
             ) {
                 Text(
                     text = "SYNC SYSTEM DATA (HEALTH CONNECT)",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.secondary
                 )
             }
         }
