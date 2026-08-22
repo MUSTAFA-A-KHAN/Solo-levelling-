@@ -217,7 +217,6 @@ class CommandCenterViewModel @Inject constructor(
             val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
             playerRepository.updatePlayer(updatedPlayer)
 
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
             questSyncUseCase.syncQuestsWithHealthData(buildDailyHealthSnapshot(startOfDay))
 
             fetchDailyHealthData() // refresh the daily total shown on the dashboard

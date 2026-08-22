@@ -6,6 +6,7 @@ import com.sololeveling.system.domain.model.LeaderboardEntry
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerSyncResult
 import com.sololeveling.system.domain.model.Quest
+import com.sololeveling.system.domain.model.QuestType
 import com.sololeveling.system.domain.model.SystemEvent
 import kotlinx.coroutines.flow.Flow
 
