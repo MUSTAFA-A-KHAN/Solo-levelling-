@@ -5,10 +5,17 @@ import androidx.room.Room
 import com.sololeveling.system.data.local.SystemDatabase
 import com.sololeveling.system.data.local.dao.PlayerDao
 import com.sololeveling.system.data.local.dao.QuestDao
+import com.sololeveling.system.data.remote.auth.AuthRepositoryImpl
+import com.sololeveling.system.data.remote.firebase.FirestorePlayerDataSource
+import com.sololeveling.system.data.remote.firebase.FirestoreQuestDataSource
+import com.sololeveling.system.data.remote.firebase.FirestoreUserDataSource
 import com.sololeveling.system.data.repository.PlayerRepositoryImpl
 import com.sololeveling.system.data.repository.QuestRepositoryImpl
+import com.sololeveling.system.data.repository.UserRepositoryImpl
+import com.sololeveling.system.domain.repository.AuthRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import com.sololeveling.system.domain.repository.QuestRepository
+import com.sololeveling.system.domain.repository.UserRepository
 import com.sololeveling.system.domain.usecase.ProgressionEngine
 import dagger.Module
 import dagger.Provides
@@ -37,8 +44,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providePlayerRepository(playerDao: PlayerDao): PlayerRepository {
-        return PlayerRepositoryImpl(playerDao)
+    fun providePlayerRepository(
+        playerDao: PlayerDao,
+        firestorePlayerDataSource: FirestorePlayerDataSource
+    ): PlayerRepository {
+        return PlayerRepositoryImpl(playerDao, firestorePlayerDataSource)
     }
 
     @Provides
@@ -47,13 +57,29 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideQuestRepository(questDao: QuestDao): QuestRepository {
-        return QuestRepositoryImpl(questDao)
+    fun provideQuestRepository(
+        questDao: QuestDao,
+        firestoreQuestDataSource: FirestoreQuestDataSource,
+        authRepository: AuthRepository
+    ): QuestRepository {
+        return QuestRepositoryImpl(questDao, firestoreQuestDataSource, authRepository)
     }
 
     @Provides
     @Singleton
     fun provideProgressionEngine(): ProgressionEngine {
         return ProgressionEngine()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(@ApplicationContext context: Context, userRepository: UserRepository): AuthRepository {
+        return AuthRepositoryImpl(context, userRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(firestoreUserDataSource: FirestoreUserDataSource): UserRepository {
+        return UserRepositoryImpl(firestoreUserDataSource)
     }
 }

@@ -3,6 +3,8 @@ package com.sololeveling.system.presentation.commandcenter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sololeveling.system.domain.model.Player
+import com.sololeveling.system.domain.model.PlayerSyncResult
+import com.sololeveling.system.domain.repository.AuthRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +39,7 @@ class CommandCenterViewModel @Inject constructor(
     private val progressionEngine: ProgressionEngine,
     private val questGenerator: QuestGenerator,
     private val questSyncUseCase: QuestSyncUseCase,
+    private val authRepository: AuthRepository,
     val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
@@ -51,6 +54,14 @@ class CommandCenterViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _syncUiState = MutableStateFlow<PlayerSyncUiState>(PlayerSyncUiState.Idle)
+    val syncUiState: StateFlow<PlayerSyncUiState> = _syncUiState.asStateFlow()
+
+    private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Idle)
+    val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
+
+    private var hasSynced = false
 
     init {
         viewModelScope.launch {
@@ -73,6 +84,57 @@ class CommandCenterViewModel @Inject constructor(
         viewModelScope.launch {
             fetchDailyHealthData()
         }
+
+        viewModelScope.launch {
+            authRepository.authState.collectLatest { user ->
+                if (user != null && !hasSynced) {
+                    hasSynced = true
+                    syncPlayer(user.uid)
+                }
+            }
+        }
+    }
+
+    private fun syncPlayer(uid: String) {
+        viewModelScope.launch {
+            _syncUiState.value = PlayerSyncUiState.Syncing
+            _connectionStatus.value = ConnectionStatus.Syncing
+            try {
+                val result = playerRepository.syncWithFirestore(uid)
+                questRepository.syncWithFirestore(uid)
+                _syncUiState.value = when (result) {
+                    is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
+                    else -> PlayerSyncUiState.Resolved
+                }
+                _connectionStatus.value = ConnectionStatus.Connected
+            } catch (e: Exception) {
+                android.util.Log.e("CommandCenterViewModel", "Firestore sync failed; continuing offline", e)
+                _syncUiState.value = PlayerSyncUiState.Resolved
+                _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Sync failed")
+            }
+        }
+    }
+
+    fun confirmRemoteOverride() {
+        viewModelScope.launch {
+            val uid = authRepository.getCurrentUser()?.uid ?: return@launch
+            try {
+                playerRepository.forceDownloadFromFirestore(uid)
+                _connectionStatus.value = ConnectionStatus.Connected
+            } catch (e: Exception) {
+                android.util.Log.e("CommandCenterViewModel", "Force download from Firestore failed", e)
+                _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Sync failed")
+            }
+            _syncUiState.value = PlayerSyncUiState.Resolved
+        }
+    }
+
+    fun clearConnectionError() {
+        _connectionStatus.value = ConnectionStatus.Syncing
+    }
+
+    fun dismissConflict() {
+        _syncUiState.value = PlayerSyncUiState.Resolved
     }
 
     private suspend fun fetchDailyHealthData() {
@@ -131,5 +193,19 @@ class CommandCenterViewModel @Inject constructor(
 
     sealed class UiEvent {
         data class RequestHealthPermissions(val permissions: Set<String>) : UiEvent()
+    }
+
+    sealed class PlayerSyncUiState {
+        object Idle : PlayerSyncUiState()
+        object Syncing : PlayerSyncUiState()
+        data class Conflict(val remote: Player) : PlayerSyncUiState()
+        object Resolved : PlayerSyncUiState()
+    }
+
+    sealed class ConnectionStatus {
+        object Idle : ConnectionStatus()
+        object Syncing : ConnectionStatus()
+        object Connected : ConnectionStatus()
+        data class Failed(val message: String) : ConnectionStatus()
     }
 }

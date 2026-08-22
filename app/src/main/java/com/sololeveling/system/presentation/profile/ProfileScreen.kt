@@ -1,5 +1,9 @@
 package com.sololeveling.system.presentation.profile
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
@@ -16,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.firebase.auth.FirebaseUser
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerAttributes
 import com.sololeveling.system.presentation.components.AtmosphericBackground
@@ -23,6 +29,7 @@ import com.sololeveling.system.presentation.components.HolographicProgressBar
 import com.sololeveling.system.presentation.components.RankEmblem
 import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.theme.*
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +38,16 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit
 ) {
     val player by viewModel.playerState.collectAsState()
+    val authUser by viewModel.authUser.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val signInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        coroutineScope.launch {
+            viewModel.handleSignInResult(result.data)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -58,11 +75,94 @@ fun ProfileScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
+                AccountSection(
+                    authUser = authUser,
+                    onSignIn = { signInLauncher.launch(viewModel.getSignInIntent()) },
+                    onSignOut = { viewModel.signOut() }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 player?.let { p ->
                     IdentityPanel(p)
                     Spacer(modifier = Modifier.height(24.dp))
                     AttributesPanel(p.attributes, p.availableAttributePoints)
                     Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AccountSection(
+    authUser: FirebaseUser?,
+    onSignIn: () -> Unit,
+    onSignOut: () -> Unit
+) {
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        borderColor = if (authUser != null) SystemNeonBlue else SystemNeonPurple
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = if (authUser != null) "LINKED ACCOUNT" else "ACCOUNT",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (authUser != null) {
+                Text(
+                    text = authUser.displayName ?: "Hunter",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = authUser.email ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(StatusError.copy(alpha = 0.15f))
+                        .clickable { onSignOut() }
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SIGN OUT",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = StatusError
+                    )
+                }
+            } else {
+                Text(
+                    text = "Not linked. Sign in to sync progress across devices.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(SystemNeonBlue.copy(alpha = 0.15f))
+                        .clickable { onSignIn() }
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SIGN IN WITH GOOGLE",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = SystemNeonBlue
+                    )
                 }
             }
         }

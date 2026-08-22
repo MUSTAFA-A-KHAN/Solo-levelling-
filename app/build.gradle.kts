@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -112,6 +113,14 @@ dependencies {
 
     // Health Connect
     implementation("androidx.health.connect:connect-client:1.0.0-alpha11")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
