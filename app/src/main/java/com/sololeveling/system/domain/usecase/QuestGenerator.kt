@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate
 import java.time.temporal.WeekFields
 import java.util.Locale
-import java.util.UUID
 import javax.inject.Inject
 
 class QuestGenerator @Inject constructor(
@@ -27,20 +26,19 @@ class QuestGenerator @Inject constructor(
         val lastWeeklyDate = preferences.lastWeeklyQuestDate.firstOrNull()
 
         if (lastDailyDate != dateString) {
-            generateDailyQuest()
+            generateDailyQuest(dateString)
             preferences.setLastDailyQuestDate(dateString)
         }
 
         if (lastWeeklyDate != weekString) {
-            generateWeeklyQuest()
+            generateWeeklyQuest(weekString)
             preferences.setLastWeeklyQuestDate(weekString)
         }
     }
 
-    private suspend fun generateDailyQuest() {
-        // Simple Solo Leveling style daily prep
+    private suspend fun generateDailyQuest(dateString: String) {
         val dailyQuest = Quest(
-            id = UUID.randomUUID().toString(),
+            id = "daily_${dateString}_1",
             title = "The Daily Prep",
             description = "Complete your daily routine to stay in shape.",
             difficulty = QuestDifficulty.E,
@@ -59,9 +57,8 @@ class QuestGenerator @Inject constructor(
             )
         )
 
-        // Let's add a second daily quest for workout
         val dailyQuest2 = Quest(
-            id = UUID.randomUUID().toString(),
+            id = "daily_${dateString}_2",
             title = "Physical Conditioning",
             description = "Push your limits.",
             difficulty = QuestDifficulty.E,
@@ -83,9 +80,9 @@ class QuestGenerator @Inject constructor(
         questRepository.addQuest(dailyQuest2)
     }
 
-    private suspend fun generateWeeklyQuest() {
+    private suspend fun generateWeeklyQuest(weekString: String) {
         val weeklyQuest = Quest(
-            id = UUID.randomUUID().toString(),
+            id = "weekly_${weekString}",
             title = "Weekly Milestone: The Long Run",
             description = "Consistent effort yields great results.",
             difficulty = QuestDifficulty.C,
