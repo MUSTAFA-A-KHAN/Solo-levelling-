@@ -49,9 +49,10 @@ object AppModule {
     @Singleton
     fun providePlayerRepository(
         playerDao: PlayerDao,
-        firestorePlayerDataSource: FirestorePlayerDataSource
+        firestorePlayerDataSource: FirestorePlayerDataSource,
+        authRepository: AuthRepository
     ): PlayerRepository {
-        return PlayerRepositoryImpl(playerDao, firestorePlayerDataSource)
+        return PlayerRepositoryImpl(playerDao, firestorePlayerDataSource, authRepository)
     }
 
     @Provides
