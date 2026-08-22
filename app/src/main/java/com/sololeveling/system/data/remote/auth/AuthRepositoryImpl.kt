@@ -25,10 +25,11 @@ class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth = FirebaseAuth.getInstance()
 
     private val googleSignInClient: GoogleSignInClient by lazy {
-        GoogleSignIn.getClient(
-            context,
-            GoogleSignInOptions.DEFAULT_SIGN_IN
-        )
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
     }
 
     override val authState: Flow<FirebaseUser?> = callbackFlow {
