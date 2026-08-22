@@ -59,12 +59,57 @@
 - `domain/model/Player.kt`
 - `domain/model/Quest.kt`
 - `domain/model/SystemEvent.kt`
-**Findings:**
-- `PlayerEntity` — single player per user (level, xp, rank, attributes, etc.)
-- `QuestEntity` — list of quests with status, objectives, rewards
-- `SystemPreferences` — app-level prefs (likely non-user-specific or needs scoping)
-- `SystemEvent` — domain event model
-**Deliverable:** Document exact field mappings for Firestore.
+**Findings (actual codebase inspection):**
+
+### 1. `PlayerEntity` (`player_table`) — single player, id = "PLAYER_1"
+Maps to `users/{uid}/player/currentPlayer`.
+
+| Room field | Firestore field | Notes |
+|---|---|---|
+| `id: String` (PK) | `id` | Stored as field; doc id = `currentPlayer` |
+| `name: String` | `name` | |
+| `title: String?` | `title` | nullable |
+| `level: Int` | `level` | |
+| `xp: Long` | `xp` | |
+| `nextLevelXp: Long` | `nextLevelXp` | |
+| `rank: String` (enum name E/D/C/B/A/S) | `rank` | store enum `.name` |
+| `strength: Double` | `strength` | attribute |
+| `agility: Double` | `agility` | attribute |
+| `vitality: Double` | `vitality` | attribute |
+| `intelligence: Double` | `intelligence` | attribute |
+| `discipline: Double` | `discipline` | attribute |
+| `endurance: Double` | `endurance` | attribute |
+| `availableAttributePoints: Int` | `availableAttributePoints` | |
+| `lastSyncTime: Long` | `lastSyncTime` | Health Connect sync cursor |
+
+Domain: `Player` + `PlayerAttributes` (same fields). `Rank` enum: E(1), D(2), C(3), B(4), A(5), S(6).
+
+### 2. `QuestEntity` (`quest_table`) — list of quests
+Maps to `users/{uid}/quests/{questId}` (doc id = `id`).
+
+| Room field | Firestore field | Notes |
+|---|---|---|
+| `id: String` (PK) | _doc id_ + `id` | |
+| `title: String` | `title` | |
+| `description: String` | `description` | |
+| `difficulty: String` (enum name) | `difficulty` | E/D/C/B/A/S |
+| `type: String` (enum name) | `type` | DAILY/WEEKLY/MAIN/SIDE/HIDDEN |
+| `isCompleted: Boolean` | `isCompleted` | |
+| `xpReward: Long` | `xpReward` | |
+| `attributeRewardsJson: String` | `attributeRewards` | JSON `Map<AttributeType,Double>` (Gson) |
+| `requiredActivityJson: String?` | `requiredActivity` | JSON `ActivityRequirement?` (Gson) |
+
+Domain: `Quest`, `AttributeType` (STRENGTH/AGILITY/VITALITY/INTELLIGENCE/DISCIPLINE/ENDURANCE), `ActivityRequirement` (activityType, targetValue, currentValue), `ActivityType` (STEPS/WORKOUT_DURATION_MINUTES/RUNNING_DISTANCE_METERS/STUDY_MINUTES).
+
+### 3. `SystemPreferences` (DataStore `system_preferences`)
+App-level prefs. Currently: `lastDailyQuestDate`, `lastWeeklyQuestDate`, `welcomeShown`. NOT user-scoped — must NOT be uploaded to Firestore per-user. Keep local-only.
+
+### 4. `SystemEvent` (domain model, `SystemEventRepository` interface)
+Interface defined but **NOT implemented** — no `SystemEventEntity`, `SystemEventDao`, or `SystemEventRepositoryImpl` exists. No events table in `SystemDatabase` (entities = `[PlayerEntity, QuestEntity]` only). **Not synced.**
+
+**Conclusion:** Only two user-progress entities exist locally — **Player** and **Quests**. Phase 8 (achievements/inventory/skills/streaks) has **no corresponding local entities** and must be skipped (do not invent models).
+
+**Deliverable:** Exact field mappings documented above for Player → `player/currentPlayer` and Quest → `quests/{questId}`.
 
 ## Phase 6 — Player Synchronization
 **Objective:** Sync Player between Room and `users/{uid}/player/currentPlayer`.

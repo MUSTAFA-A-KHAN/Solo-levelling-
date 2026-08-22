@@ -3,6 +3,7 @@ package com.sololeveling.system.domain.repository
 import android.content.Intent
 import com.google.firebase.auth.FirebaseUser
 import com.sololeveling.system.domain.model.Player
+import com.sololeveling.system.domain.model.PlayerSyncResult
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.domain.model.SystemEvent
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +12,8 @@ interface PlayerRepository {
     fun getPlayer(): Flow<Player?>
     suspend fun updatePlayer(player: Player)
     suspend fun initializePlayer(name: String)
+    suspend fun syncWithFirestore(uid: String): PlayerSyncResult
+    suspend fun forceDownloadFromFirestore(uid: String)
 }
 
 interface QuestRepository {

@@ -5,8 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,6 +38,7 @@ fun CommandCenterScreen(
     val player by viewModel.playerState.collectAsState()
     val activeQuests by viewModel.activeQuests.collectAsState()
     val dailyHealthData by viewModel.dailyHealthData.collectAsState()
+    val syncUiState by viewModel.syncUiState.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = PermissionController.createRequestPermissionResultContract()
@@ -142,6 +145,32 @@ fun CommandCenterScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    if (syncUiState is CommandCenterViewModel.PlayerSyncUiState.Conflict) {
+        val remote = (syncUiState as CommandCenterViewModel.PlayerSyncUiState.Conflict).remote
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissConflict() },
+            title = { Text("EXISTING PROGRESS FOUND", color = MaterialTheme.colorScheme.primary) },
+            text = {
+                Text(
+                    "Your Google account already has saved progress (Level ${remote.level}). " +
+                        "Restoring it will replace your local progress on this device. " +
+                        "Continue?",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmRemoteOverride() }) {
+                    Text("RESTORE CLOUD", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissConflict() }) {
+                    Text("KEEP LOCAL", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
     }
 }
 

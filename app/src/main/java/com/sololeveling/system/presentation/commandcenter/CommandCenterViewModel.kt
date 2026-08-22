@@ -3,6 +3,8 @@ package com.sololeveling.system.presentation.commandcenter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sololeveling.system.domain.model.Player
+import com.sololeveling.system.domain.model.PlayerSyncResult
+import com.sololeveling.system.domain.repository.AuthRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +39,7 @@ class CommandCenterViewModel @Inject constructor(
     private val progressionEngine: ProgressionEngine,
     private val questGenerator: QuestGenerator,
     private val questSyncUseCase: QuestSyncUseCase,
+    private val authRepository: AuthRepository,
     val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
@@ -51,6 +54,11 @@ class CommandCenterViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _syncUiState = MutableStateFlow<PlayerSyncUiState>(PlayerSyncUiState.Idle)
+    val syncUiState: StateFlow<PlayerSyncUiState> = _syncUiState.asStateFlow()
+
+    private var hasSynced = false
 
     init {
         viewModelScope.launch {
@@ -73,6 +81,38 @@ class CommandCenterViewModel @Inject constructor(
         viewModelScope.launch {
             fetchDailyHealthData()
         }
+
+        viewModelScope.launch {
+            authRepository.authState.collectLatest { user ->
+                if (user != null && !hasSynced) {
+                    hasSynced = true
+                    syncPlayer(user.uid)
+                }
+            }
+        }
+    }
+
+    private fun syncPlayer(uid: String) {
+        viewModelScope.launch {
+            _syncUiState.value = PlayerSyncUiState.Syncing
+            val result = playerRepository.syncWithFirestore(uid)
+            _syncUiState.value = when (result) {
+                is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
+                else -> PlayerSyncUiState.Resolved
+            }
+        }
+    }
+
+    fun confirmRemoteOverride() {
+        viewModelScope.launch {
+            val uid = authRepository.getCurrentUser()?.uid ?: return@launch
+            playerRepository.forceDownloadFromFirestore(uid)
+            _syncUiState.value = PlayerSyncUiState.Resolved
+        }
+    }
+
+    fun dismissConflict() {
+        _syncUiState.value = PlayerSyncUiState.Resolved
     }
 
     private suspend fun fetchDailyHealthData() {
@@ -131,5 +171,12 @@ class CommandCenterViewModel @Inject constructor(
 
     sealed class UiEvent {
         data class RequestHealthPermissions(val permissions: Set<String>) : UiEvent()
+    }
+
+    sealed class PlayerSyncUiState {
+        object Idle : PlayerSyncUiState()
+        object Syncing : PlayerSyncUiState()
+        data class Conflict(val remote: Player) : PlayerSyncUiState()
+        object Resolved : PlayerSyncUiState()
     }
 }
