@@ -6,13 +6,16 @@ import com.sololeveling.system.data.local.SystemDatabase
 import com.sololeveling.system.data.local.dao.PlayerDao
 import com.sololeveling.system.data.local.dao.QuestDao
 import com.sololeveling.system.data.remote.auth.AuthRepositoryImpl
+import com.sololeveling.system.data.remote.firebase.FirestoreLeaderboardDataSource
 import com.sololeveling.system.data.remote.firebase.FirestorePlayerDataSource
 import com.sololeveling.system.data.remote.firebase.FirestoreQuestDataSource
 import com.sololeveling.system.data.remote.firebase.FirestoreUserDataSource
+import com.sololeveling.system.data.repository.LeaderboardRepositoryImpl
 import com.sololeveling.system.data.repository.PlayerRepositoryImpl
 import com.sololeveling.system.data.repository.QuestRepositoryImpl
 import com.sololeveling.system.data.repository.UserRepositoryImpl
 import com.sololeveling.system.domain.repository.AuthRepository
+import com.sololeveling.system.domain.repository.LeaderboardRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import com.sololeveling.system.domain.repository.QuestRepository
 import com.sololeveling.system.domain.repository.UserRepository
@@ -81,5 +84,14 @@ object AppModule {
     @Singleton
     fun provideUserRepository(firestoreUserDataSource: FirestoreUserDataSource): UserRepository {
         return UserRepositoryImpl(firestoreUserDataSource)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLeaderboardRepository(
+        firestoreLeaderboardDataSource: FirestoreLeaderboardDataSource,
+        authRepository: AuthRepository
+    ): LeaderboardRepository {
+        return LeaderboardRepositoryImpl(firestoreLeaderboardDataSource, authRepository)
     }
 }

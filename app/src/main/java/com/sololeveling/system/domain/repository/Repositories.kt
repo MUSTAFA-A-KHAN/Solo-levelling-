@@ -2,6 +2,7 @@ package com.sololeveling.system.domain.repository
 
 import android.content.Intent
 import com.google.firebase.auth.FirebaseUser
+import com.sololeveling.system.domain.model.LeaderboardEntry
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerSyncResult
 import com.sololeveling.system.domain.model.Quest
@@ -42,4 +43,9 @@ interface AuthRepository {
 
 interface UserRepository {
     suspend fun createOrUpdateAccount(user: FirebaseUser)
+}
+
+interface LeaderboardRepository {
+    fun getLeaderboard(): Flow<List<LeaderboardEntry>>
+    suspend fun updateMyEntry(player: Player, completedQuests: Int)
 }

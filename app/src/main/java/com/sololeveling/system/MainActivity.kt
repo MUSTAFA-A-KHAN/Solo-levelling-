@@ -20,6 +20,7 @@ import com.sololeveling.system.domain.repository.AuthRepository
 import com.sololeveling.system.presentation.awakening.AwakeningScreen
 import com.sololeveling.system.presentation.commandcenter.CommandCenterScreen
 import com.sololeveling.system.presentation.commandcenter.CommandCenterViewModel
+import com.sololeveling.system.presentation.leaderboard.LeaderboardScreen
 import com.sololeveling.system.presentation.profile.ProfileScreen
 import com.sololeveling.system.presentation.quest.QuestScreen
 import com.sololeveling.system.presentation.theme.SystemTheme
@@ -101,12 +102,23 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable("command_center") {
-                            CommandCenterScreen(
-                                onNavigateToProfile = { navController.navigate("profile") },
-                                onNavigateToQuests = { navController.navigate("quests") }
-                            )
-                        }
+                         composable("command_center") {
+                             CommandCenterScreen(
+                                 onNavigateToProfile = { navController.navigate("profile") },
+                                 onNavigateToQuests = { navController.navigate("quests") },
+                                 onNavigateToLeaderboard = { navController.navigate("leaderboard") }
+                             )
+                         }
+                         composable("leaderboard") {
+                             LeaderboardScreen(
+                                 onNavigateBack = { navController.popBackStack() },
+                                 onNavigateToProfile = {
+                                     navController.navigate("profile") {
+                                         popUpTo("leaderboard") { inclusive = false }
+                                     }
+                                 }
+                             )
+                         }
                         composable("profile") {
                             ProfileScreen(
                                 onNavigateBack = { navController.popBackStack() }

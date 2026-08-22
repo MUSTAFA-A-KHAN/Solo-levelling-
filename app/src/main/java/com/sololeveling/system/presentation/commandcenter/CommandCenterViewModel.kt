@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerSyncResult
 import com.sololeveling.system.domain.repository.AuthRepository
+import com.sololeveling.system.domain.repository.LeaderboardRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.domain.usecase.QuestSyncUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -40,6 +42,7 @@ class CommandCenterViewModel @Inject constructor(
     private val questGenerator: QuestGenerator,
     private val questSyncUseCase: QuestSyncUseCase,
     private val authRepository: AuthRepository,
+    private val leaderboardRepository: LeaderboardRepository,
     val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
@@ -102,11 +105,13 @@ class CommandCenterViewModel @Inject constructor(
             try {
                 val result = playerRepository.syncWithFirestore(uid)
                 questRepository.syncWithFirestore(uid)
-                _syncUiState.value = when (result) {
+                 _syncUiState.value = when (result) {
                     is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
                     else -> PlayerSyncUiState.Resolved
                 }
                 _connectionStatus.value = ConnectionStatus.Connected
+
+                refreshLeaderboardEntry()
             } catch (e: Exception) {
                 android.util.Log.e("CommandCenterViewModel", "Firestore sync failed; continuing offline", e)
                 _syncUiState.value = PlayerSyncUiState.Resolved
@@ -115,12 +120,19 @@ class CommandCenterViewModel @Inject constructor(
         }
     }
 
+    private suspend fun refreshLeaderboardEntry(player: Player? = null) {
+        val currentPlayer = player ?: playerRepository.getPlayer().firstOrNull() ?: return
+        val completedQuests = questRepository.getCompletedQuests().firstOrNull()?.size ?: 0
+        leaderboardRepository.updateMyEntry(currentPlayer, completedQuests)
+    }
+
     fun confirmRemoteOverride() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUser()?.uid ?: return@launch
             try {
                 playerRepository.forceDownloadFromFirestore(uid)
                 _connectionStatus.value = ConnectionStatus.Connected
+                refreshLeaderboardEntry()
             } catch (e: Exception) {
                 android.util.Log.e("CommandCenterViewModel", "Force download from Firestore failed", e)
                 _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Sync failed")
@@ -188,6 +200,7 @@ class CommandCenterViewModel @Inject constructor(
             questSyncUseCase.syncQuestsWithHealthData(steps, workoutMinutes)
 
             fetchDailyHealthData() // refresh the daily total shown on the dashboard
+            refreshLeaderboardEntry(updatedPlayer)
         }
     }
 
