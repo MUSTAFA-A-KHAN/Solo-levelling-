@@ -22,6 +22,7 @@ interface QuestRepository {
     fun getCompletedQuests(): Flow<List<Quest>>
     suspend fun updateQuest(quest: Quest)
     suspend fun addQuest(quest: Quest)
+    suspend fun deleteQuestsByType(type: QuestType)
     suspend fun syncWithFirestore(uid: String)
 }
 

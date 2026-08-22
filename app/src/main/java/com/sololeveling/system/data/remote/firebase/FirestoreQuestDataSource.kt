@@ -45,6 +45,16 @@ class FirestoreQuestDataSource @Inject constructor() {
             .await()
     }
 
+    suspend fun deleteQuest(uid: String, questId: String) {
+        firestore
+            .collection(USERS_COLLECTION)
+            .document(uid)
+            .collection(QUESTS_SUBCOLLECTION)
+            .document(questId)
+            .delete()
+            .await()
+    }
+
     companion object {
         private const val USERS_COLLECTION = "users"
         private const val QUESTS_SUBCOLLECTION = "quests"

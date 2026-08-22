@@ -22,6 +22,9 @@ interface QuestDao {
     @Update
     suspend fun updateQuest(quest: QuestEntity)
 
-    @Query("DELETE FROM quest_table WHERE id = :questId")
-    suspend fun deleteQuest(questId: String)
+    @Query("SELECT * FROM quest_table WHERE type = :type")
+    suspend fun getQuestsByType(type: String): List<QuestEntity>
+
+    @Query("DELETE FROM quest_table WHERE type = :type")
+    suspend fun deleteQuestsByType(type: String)
 }

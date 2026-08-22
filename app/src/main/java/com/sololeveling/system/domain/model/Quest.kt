@@ -17,7 +17,7 @@ data class Quest(
 )
 
 enum class QuestDifficulty(val value: Int) { E(1), D(2), C(3), B(4), A(5), S(6) }
-enum class QuestType { DAILY, WEEKLY, MAIN, SIDE, HIDDEN }
+enum class QuestType { DAILY, WEEKLY, MAIN, SIDE, HIDDEN, SHORT }
 
 data class ActivityRequirement(
     val activityType: ActivityType,
@@ -29,5 +29,9 @@ enum class ActivityType {
     STEPS,
     WORKOUT_DURATION_MINUTES,
     RUNNING_DISTANCE_METERS,
-    STUDY_MINUTES
+    STUDY_MINUTES,
+    SLEEP_MINUTES,
+    EXERCISE_SESSIONS,
+    EVENING_STEPS,
+    FIRST_MOVEMENT
 }
