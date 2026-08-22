@@ -58,6 +58,9 @@ class CommandCenterViewModel @Inject constructor(
     private val _syncUiState = MutableStateFlow<PlayerSyncUiState>(PlayerSyncUiState.Idle)
     val syncUiState: StateFlow<PlayerSyncUiState> = _syncUiState.asStateFlow()
 
+    private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Idle)
+    val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
+
     private var hasSynced = false
 
     init {
@@ -95,6 +98,7 @@ class CommandCenterViewModel @Inject constructor(
     private fun syncPlayer(uid: String) {
         viewModelScope.launch {
             _syncUiState.value = PlayerSyncUiState.Syncing
+            _connectionStatus.value = ConnectionStatus.Syncing
             try {
                 val result = playerRepository.syncWithFirestore(uid)
                 questRepository.syncWithFirestore(uid)
@@ -102,9 +106,11 @@ class CommandCenterViewModel @Inject constructor(
                     is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
                     else -> PlayerSyncUiState.Resolved
                 }
+                _connectionStatus.value = ConnectionStatus.Connected
             } catch (e: Exception) {
                 android.util.Log.e("CommandCenterViewModel", "Firestore sync failed; continuing offline", e)
                 _syncUiState.value = PlayerSyncUiState.Resolved
+                _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Sync failed")
             }
         }
     }
@@ -114,11 +120,17 @@ class CommandCenterViewModel @Inject constructor(
             val uid = authRepository.getCurrentUser()?.uid ?: return@launch
             try {
                 playerRepository.forceDownloadFromFirestore(uid)
+                _connectionStatus.value = ConnectionStatus.Connected
             } catch (e: Exception) {
                 android.util.Log.e("CommandCenterViewModel", "Force download from Firestore failed", e)
+                _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Sync failed")
             }
             _syncUiState.value = PlayerSyncUiState.Resolved
         }
+    }
+
+    fun clearConnectionError() {
+        _connectionStatus.value = ConnectionStatus.Syncing
     }
 
     fun dismissConflict() {
@@ -188,5 +200,12 @@ class CommandCenterViewModel @Inject constructor(
         object Syncing : PlayerSyncUiState()
         data class Conflict(val remote: Player) : PlayerSyncUiState()
         object Resolved : PlayerSyncUiState()
+    }
+
+    sealed class ConnectionStatus {
+        object Idle : ConnectionStatus()
+        object Syncing : ConnectionStatus()
+        object Connected : ConnectionStatus()
+        data class Failed(val message: String) : ConnectionStatus()
     }
 }

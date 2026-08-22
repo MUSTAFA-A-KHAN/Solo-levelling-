@@ -1,6 +1,9 @@
 package com.sololeveling.system.presentation.commandcenter
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,6 +18,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +44,7 @@ fun CommandCenterScreen(
     val activeQuests by viewModel.activeQuests.collectAsState()
     val dailyHealthData by viewModel.dailyHealthData.collectAsState()
     val syncUiState by viewModel.syncUiState.collectAsState()
+    val connectionStatus by viewModel.connectionStatus.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = PermissionController.createRequestPermissionResultContract()
@@ -73,6 +79,13 @@ fun CommandCenterScreen(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+
+            ConnectionStatusIndicator(
+                status = connectionStatus,
+                onDismissError = { viewModel.clearConnectionError() }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "COMMAND CENTER",
@@ -171,6 +184,78 @@ fun CommandCenterScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun ConnectionStatusIndicator(
+    status: CommandCenterViewModel.ConnectionStatus,
+    onDismissError: () -> Unit
+) {
+    val dotColor: Color
+    val dotPulse: Boolean
+    val errorMessage: String?
+    val shouldShowError: Boolean
+
+    when (status) {
+        is CommandCenterViewModel.ConnectionStatus.Connected -> {
+            dotColor = StatusSuccess
+            dotPulse = false
+            errorMessage = null
+            shouldShowError = false
+        }
+        is CommandCenterViewModel.ConnectionStatus.Syncing -> {
+            dotColor = StatusWarning
+            dotPulse = true
+            errorMessage = null
+            shouldShowError = false
+        }
+        is CommandCenterViewModel.ConnectionStatus.Failed -> {
+            dotColor = StatusError
+            dotPulse = true
+            errorMessage = status.message
+            shouldShowError = true
+        }
+        is CommandCenterViewModel.ConnectionStatus.Idle -> {
+            dotColor = MaterialTheme.colorScheme.onSurfaceVariant
+            dotPulse = false
+            errorMessage = null
+            shouldShowError = false
+        }
+    }
+
+    val animatedDotColor by animateColorAsState(
+        targetValue = dotColor,
+        animationSpec = tween(durationMillis = if (dotPulse) 600 else 300)
+    )
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(bottom = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(if (dotPulse) 12.dp else 10.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(animatedDotColor)
+        )
+
+        if (shouldShowError && errorMessage != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "FIREBASE OFFLINE: $errorMessage",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = StatusError,
+                modifier = Modifier.clickable { onDismissError() }
+            )
+        } else {
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "CLOUD CONNECTED",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (dotPulse) StatusWarning else StatusSuccess
+            )
+        }
     }
 }
 
