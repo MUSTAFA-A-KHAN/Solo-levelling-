@@ -53,6 +53,6 @@ class FirestoreLeaderboardDataSource @Inject constructor() {
     companion object {
         private const val TAG = "FirestoreLeaderboard"
         private const val LEADERBOARD_COLLECTION = "leaderboard"
-        private const val LEADERBOARD_LIMIT = 100
+        private const val LEADERBOARD_LIMIT: Long = 100
     }
 }
