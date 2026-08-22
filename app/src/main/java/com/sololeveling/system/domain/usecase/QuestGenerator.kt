@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate
 import java.time.temporal.WeekFields
 import java.util.Locale
-import java.util.UUID
 import javax.inject.Inject
 
 class QuestGenerator @Inject constructor(
@@ -27,20 +26,126 @@ class QuestGenerator @Inject constructor(
         val lastWeeklyDate = preferences.lastWeeklyQuestDate.firstOrNull()
 
         if (lastDailyDate != dateString) {
-            generateDailyQuest()
+            questRepository.deleteQuestsByType(QuestType.SHORT)
+            generateDailyQuest(dateString)
+            generateShortQuests(dateString)
             preferences.setLastDailyQuestDate(dateString)
         }
 
         if (lastWeeklyDate != weekString) {
-            generateWeeklyQuest()
+            generateWeeklyQuest(weekString)
             preferences.setLastWeeklyQuestDate(weekString)
         }
     }
 
-    private suspend fun generateDailyQuest() {
-        // Simple Solo Leveling style daily prep
+    private suspend fun generateShortQuests(dateString: String) {
+        val quests = listOf(
+            Quest(
+                id = "short_${dateString}_body_awakening",
+                title = "Body Awakening",
+                description = "Reach your personalized step target for today.",
+                difficulty = QuestDifficulty.E,
+                type = QuestType.SHORT,
+                xpReward = 80,
+                attributeRewards = mapOf(AttributeType.ENDURANCE to 0.3, AttributeType.VITALITY to 0.2),
+                requiredActivity = ActivityRequirement(
+                    activityType = ActivityType.STEPS,
+                    targetValue = 8000.0,
+                    currentValue = 0.0
+                )
+            ),
+            Quest(
+                id = "short_${dateString}_mana_recovery",
+                title = "Mana Recovery",
+                description = "Get your sleep target to restore your mana.",
+                difficulty = QuestDifficulty.E,
+                type = QuestType.SHORT,
+                xpReward = 80,
+                attributeRewards = mapOf(AttributeType.INTELLIGENCE to 0.3, AttributeType.VITALITY to 0.2),
+                requiredActivity = ActivityRequirement(
+                    activityType = ActivityType.SLEEP_MINUTES,
+                    targetValue = 420.0,
+                    currentValue = 0.0
+                )
+            ),
+            Quest(
+                id = "short_${dateString}_iron_body",
+                title = "Iron Body",
+                description = "Complete at least one exercise session.",
+                difficulty = QuestDifficulty.D,
+                type = QuestType.SHORT,
+                xpReward = 100,
+                attributeRewards = mapOf(AttributeType.STRENGTH to 0.4, AttributeType.ENDURANCE to 0.3),
+                requiredActivity = ActivityRequirement(
+                    activityType = ActivityType.EXERCISE_SESSIONS,
+                    targetValue = 1.0,
+                    currentValue = 0.0
+                )
+            ),
+            Quest(
+                id = "short_${dateString}_the_long_march",
+                title = "The Long March",
+                description = "Walk continuously for a sustained duration.",
+                difficulty = QuestDifficulty.D,
+                type = QuestType.SHORT,
+                xpReward = 100,
+                attributeRewards = mapOf(AttributeType.ENDURANCE to 0.4, AttributeType.AGILITY to 0.2),
+                requiredActivity = ActivityRequirement(
+                    activityType = ActivityType.WORKOUT_DURATION_MINUTES,
+                    targetValue = 30.0,
+                    currentValue = 0.0
+                )
+            ),
+            Quest(
+                id = "short_${dateString}_no_slacking",
+                title = "No Slacking",
+                description = "Reach your full activity target before the day ends.",
+                difficulty = QuestDifficulty.C,
+                type = QuestType.SHORT,
+                xpReward = 120,
+                attributeRewards = mapOf(AttributeType.DISCIPLINE to 0.4, AttributeType.ENDURANCE to 0.3),
+                requiredActivity = ActivityRequirement(
+                    activityType = ActivityType.STEPS,
+                    targetValue = 10000.0,
+                    currentValue = 0.0
+                )
+            ),
+            Quest(
+                id = "short_${dateString}_first_movement",
+                title = "First Movement",
+                description = "Record activity before 10:00 AM.",
+                difficulty = QuestDifficulty.E,
+                type = QuestType.SHORT,
+                xpReward = 60,
+                attributeRewards = mapOf(AttributeType.AGILITY to 0.3, AttributeType.DISCIPLINE to 0.2),
+                requiredActivity = ActivityRequirement(
+                    activityType = ActivityType.FIRST_MOVEMENT,
+                    targetValue = 1.0,
+                    currentValue = 0.0
+                )
+            ),
+            Quest(
+                id = "short_${dateString}_final_push",
+                title = "Final Push",
+                description = "Complete your remaining activity target in the evening.",
+                difficulty = QuestDifficulty.C,
+                type = QuestType.SHORT,
+                xpReward = 120,
+                attributeRewards = mapOf(AttributeType.DISCIPLINE to 0.4, AttributeType.STRENGTH to 0.3),
+                requiredActivity = ActivityRequirement(
+                    activityType = ActivityType.EVENING_STEPS,
+                    targetValue = 2000.0,
+                    currentValue = 0.0
+                )
+            )
+        )
+
+        quests.forEach { questRepository.addQuest(it) }
+    }
+
+    private suspend fun generateDailyQuest(dateString: String) {
         val dailyQuest = Quest(
-            id = UUID.randomUUID().toString(),
+            id = "daily_${dateString}_1",
             title = "The Daily Prep",
             description = "Complete your daily routine to stay in shape.",
             difficulty = QuestDifficulty.E,
@@ -59,9 +164,8 @@ class QuestGenerator @Inject constructor(
             )
         )
 
-        // Let's add a second daily quest for workout
         val dailyQuest2 = Quest(
-            id = UUID.randomUUID().toString(),
+            id = "daily_${dateString}_2",
             title = "Physical Conditioning",
             description = "Push your limits.",
             difficulty = QuestDifficulty.E,
@@ -83,9 +187,9 @@ class QuestGenerator @Inject constructor(
         questRepository.addQuest(dailyQuest2)
     }
 
-    private suspend fun generateWeeklyQuest() {
+    private suspend fun generateWeeklyQuest(weekString: String) {
         val weeklyQuest = Quest(
-            id = UUID.randomUUID().toString(),
+            id = "weekly_${weekString}",
             title = "Weekly Milestone: The Long Run",
             description = "Consistent effort yields great results.",
             difficulty = QuestDifficulty.C,

@@ -171,3 +171,44 @@ Interface defined but **NOT implemented** — no `SystemEventEntity`, `SystemEve
 - Security rules enforced (no public access)
 **Build:** `./gradlew clean test assembleDebug`
 **Deliverable:** All tests green, no lint errors, APK builds successfully.
+
+## Phase 12 — Global Leaderboard
+**Status:** ✅ COMPLETE
+**Objective:** Show all authenticated hunters ranked by progress, with live real-time updates.
+
+### Data model
+- `domain/model/LeaderboardEntry.kt` — public fields only: `uid`, `displayName`, `photoUrl`, `rank`, `level`, `xp`, `nextLevelXp`, `totalAttributes`, `completedQuests`, `score`, `lastUpdated`.
+- `score = level * 1_000_000L + xp` — single sortable value so higher level always wins; within a level, higher XP wins.
+
+### Firestore structure
+- Dedicated `leaderboard` collection at the database root (NOT under `users/{uid}`). Each document is keyed by `uid`.
+  - **Why a separate collection:** cross-user reads are required for rankings. Reading every user's private `users/{uid}/player/currentPlayer` is blocked by per-user security rules and needs collection-group queries + composite indexes. A denormalized, publicly-readable leaderboard collection avoids this.
+  - Denormalized snapshot of public progress; written only by the owning user and read by all authenticated users. Eventual consistency is acceptable for rankings.
+
+### Data layer
+- `data/remote/firebase/LeaderboardDocument.kt` — Firestore document ↔ domain mapping (`toDomain` / `toDocument`), with safe `Rank.valueOf` parsing.
+- `data/remote/firebase/FirestoreLeaderboardDataSource.kt` — real-time `addSnapshotListener` on `leaderboard` ordered by `score` DESC (capped at 100); `upsertEntry` writes the user's own entry.
+- `domain/repository/LeaderboardRepository.kt` (+ `Repositories.kt`): `getLeaderboard(): Flow<List<LeaderboardEntry>>`, `updateMyEntry(player, completedQuests)`.
+- `data/repository/LeaderboardRepositoryImpl.kt` — builds the entry from the local `Player` + `FirebaseUser` (name/photo), computes `score`/`totalAttributes`; writes only when a Firebase user is signed in.
+
+### Sync triggers (keep the leaderboard fresh)
+- `CommandCenterViewModel.refreshLeaderboardEntry()` is invoked after:
+  - Player/firestore sync resolves (`syncPlayer`)
+  - Health data is processed and the local player is updated (`syncHealthData`)
+  - A conflict is resolved via `confirmRemoteOverride`
+- Keeps the public ranking in sync with local progression without coupling `PlayerRepository` to the leaderboard directly.
+
+### UI
+- `presentation/leaderboard/LeaderboardViewModel.kt` — exposes `entries`, `isLoading`, `isAuthenticated`, `errorMessage` StateFlows; observes auth state + Firestore real-time listener.
+- `presentation/leaderboard/LeaderboardScreen.kt` — `Scaffold` + `AtmosphericBackground`; states: not-linked (prompt → Profile sign-in), loading, error, empty, ranked `LazyColumn`. Each row shows a podium medal (🥇🥈🥉), `RankEmblem`, display name, "YOU" highlight, LEVEL, XP, and completed-quest count. The user's own entry is clickable to jump to Profile.
+
+### Navigation
+- New `leaderboard` route in `MainActivity` NavHost; navigated from a new **LEADERBOARD** panel on `CommandCenterScreen` (between QUEST LOG and SYNC DATA) via `onNavigateToLeaderboard`.
+
+### Security rules (`firestore.rules`)
+- `match /leaderboard/{userId}` → `allow read: if request.auth != null`; `allow create, update, delete: if request.auth.uid == userId`.
+- All authenticated users can read rankings; a user can only write their own entry. No public/unauthenticated access. No composite index required (single-field `score` index is auto-managed by Firestore).
+
+### Verification
+- `./gradlew clean test assembleDebug` — BUILD SUCCESSFUL.
+- Live listener emits on remote writes; own entry updates after sync and after each health-sync cycle.

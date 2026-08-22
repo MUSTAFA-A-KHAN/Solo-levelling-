@@ -38,7 +38,8 @@ import com.sololeveling.system.presentation.theme.*
 fun CommandCenterScreen(
     viewModel: CommandCenterViewModel = hiltViewModel(),
     onNavigateToProfile: () -> Unit,
-    onNavigateToQuests: () -> Unit
+    onNavigateToQuests: () -> Unit,
+    onNavigateToLeaderboard: () -> Unit
 ) {
     val player by viewModel.playerState.collectAsState()
     val activeQuests by viewModel.activeQuests.collectAsState()
@@ -120,6 +121,27 @@ fun CommandCenterScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${activeQuests.size} ACTIVE",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                SystemPanel(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onNavigateToLeaderboard() },
+                    borderColor = SystemNeonPurple
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "LEADERBOARD",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = SystemNeonPurple
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "RANKINGS",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

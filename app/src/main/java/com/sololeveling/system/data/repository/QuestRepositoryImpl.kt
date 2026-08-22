@@ -6,6 +6,7 @@ import com.sololeveling.system.data.local.entity.toDomain
 import com.sololeveling.system.data.local.entity.toEntity
 import com.sololeveling.system.data.remote.firebase.FirestoreQuestDataSource
 import com.sololeveling.system.domain.model.Quest
+import com.sololeveling.system.domain.model.QuestType
 import com.sololeveling.system.domain.model.AttributeType
 import com.sololeveling.system.domain.model.ActivityRequirement
 import com.sololeveling.system.domain.repository.AuthRepository
@@ -57,6 +58,16 @@ class QuestRepositoryImpl @Inject constructor(
         authRepository.getCurrentUser()?.uid?.let { uid ->
             firestoreQuestDataSource.saveQuest(uid, quest)
         }
+    }
+
+    override suspend fun deleteQuestsByType(type: QuestType) {
+        val entities = questDao.getQuestsByType(type.name)
+        authRepository.getCurrentUser()?.uid?.let { uid ->
+            entities.forEach { entity ->
+                firestoreQuestDataSource.deleteQuest(uid, entity.id)
+            }
+        }
+        questDao.deleteQuestsByType(type.name)
     }
 
     override suspend fun syncWithFirestore(uid: String) {
