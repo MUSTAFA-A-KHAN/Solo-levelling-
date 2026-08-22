@@ -9,7 +9,8 @@ data class Player(
     val nextLevelXp: Long = 100, // Determined by progression curve
     val rank: Rank = Rank.E,
     val attributes: PlayerAttributes = PlayerAttributes(),
-    val availableAttributePoints: Int = 0
+    val availableAttributePoints: Int = 0,
+    val lastSyncTime: Long = System.currentTimeMillis() // Track when Health Connect was last synced
 )
 
 data class PlayerAttributes(

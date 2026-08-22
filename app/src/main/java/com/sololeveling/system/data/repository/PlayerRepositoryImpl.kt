@@ -8,6 +8,8 @@ import com.sololeveling.system.domain.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 class PlayerRepositoryImpl @Inject constructor(
@@ -26,7 +28,9 @@ class PlayerRepositoryImpl @Inject constructor(
         // Prevent wiping out data if the player already exists
         val currentPlayer = playerDao.getPlayer().firstOrNull()
         if (currentPlayer == null) {
-            val newPlayer = Player(name = name)
+            // Set sync time to the start of today so they get credit for today's past activities
+            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val newPlayer = Player(name = name, lastSyncTime = startOfDay)
             playerDao.insertPlayer(newPlayer.toEntity())
         }
     }

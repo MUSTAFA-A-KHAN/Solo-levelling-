@@ -1,10 +1,46 @@
 [
     {
+        "merged": "com.sololeveling.system.app-merged_res-4:/font_rajdhani_bold.ttf.flat",
+        "source": "com.sololeveling.system.app-main-6:/font/rajdhani_bold.ttf"
+    },
+    {
+        "merged": "com.sololeveling.system.app-merged_res-4:/font_rajdhani_light.ttf.flat",
+        "source": "com.sololeveling.system.app-main-6:/font/rajdhani_light.ttf"
+    },
+    {
+        "merged": "com.sololeveling.system.app-merged_res-4:/font_rajdhani_semibold.ttf.flat",
+        "source": "com.sololeveling.system.app-main-6:/font/rajdhani_semibold.ttf"
+    },
+    {
+        "merged": "com.sololeveling.system.app-merged_res-4:/font_rajdhani_medium.ttf.flat",
+        "source": "com.sololeveling.system.app-main-6:/font/rajdhani_medium.ttf"
+    },
+    {
+        "merged": "com.sololeveling.system.app-merged_res-4:/font_rajdhani_regular.ttf.flat",
+        "source": "com.sololeveling.system.app-main-6:/font/rajdhani_regular.ttf"
+    },
+    {
         "merged": "com.sololeveling.system.app-merged_res-4:/xml_data_extraction_rules.xml.flat",
         "source": "com.sololeveling.system.app-main-6:/xml/data_extraction_rules.xml"
     },
     {
+        "merged": "com.sololeveling.system.app-merged_res-4:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.sololeveling.system.app-main-6:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
         "merged": "com.sololeveling.system.app-merged_res-4:/xml_backup_rules.xml.flat",
         "source": "com.sololeveling.system.app-main-6:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.sololeveling.system.app-merged_res-4:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.sololeveling.system.app-main-6:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.sololeveling.system.app-merged_res-4:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.sololeveling.system.app-main-6:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.sololeveling.system.app-merged_res-4:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.sololeveling.system.app-main-6:/drawable/ic_launcher_background.xml"
     }
 ]

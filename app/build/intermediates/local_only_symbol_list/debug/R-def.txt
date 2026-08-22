@@ -1,5 +1,14 @@
 R_DEF: Internal format may change without notice
 local
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+font rajdhani_bold
+font rajdhani_light
+font rajdhani_medium
+font rajdhani_regular
+font rajdhani_semibold
+mipmap ic_launcher
+mipmap ic_launcher_round
 string app_name
 style Theme.System
 xml backup_rules

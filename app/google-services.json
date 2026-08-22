@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "970723410342",
+    "project_id": "solo-leveling-system-544c2",
+    "storage_bucket": "solo-leveling-system-544c2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:970723410342:android:1f536c7bbe825d02f80f67",
+        "android_client_info": {
+          "package_name": "com.sololeveling.system"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "970723410342-7sb89voohaqa3allgtjeljs1fvusmbig.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sololeveling.system",
+            "certificate_hash": "757daed95ff726fad3843218959b41d397ef98d8"
+          }
+        },
+        {
+          "client_id": "970723410342-kkmamniiko2netnqcret7heq591e3vea.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0U_K3qn7eie1-EdCAcgkarNfHDVg3ycs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "970723410342-kkmamniiko2netnqcret7heq591e3vea.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

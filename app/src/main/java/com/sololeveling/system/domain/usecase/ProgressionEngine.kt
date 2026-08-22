@@ -47,4 +47,37 @@ class ProgressionEngine {
             else -> Rank.E
         }
     }
+
+    /**
+     * Converts real-world health data deterministically into System progression.
+     * 100 steps = 1 XP, +0.01 Agility/Endurance
+     * 1 min workout = 10 XP, +0.1 Strength/Vitality
+     */
+    fun processHealthData(player: Player, steps: Long, workoutMinutes: Long, syncTime: Long): Player {
+        if (steps <= 0 && workoutMinutes <= 0) return player.copy(lastSyncTime = syncTime)
+
+        val xpFromSteps = steps / 100
+        val xpFromWorkouts = workoutMinutes * 10
+        val totalXpGained = xpFromSteps + xpFromWorkouts
+
+        val agilityGain = (steps / 100) * 0.01
+        val enduranceGain = (steps / 100) * 0.01
+        val strengthGain = workoutMinutes * 0.1
+        val vitalityGain = workoutMinutes * 0.1
+
+        val newAttributes = player.attributes.copy(
+            agility = player.attributes.agility + agilityGain,
+            endurance = player.attributes.endurance + enduranceGain,
+            strength = player.attributes.strength + strengthGain,
+            vitality = player.attributes.vitality + vitalityGain
+        )
+
+        val playerWithXp = addXp(player, totalXpGained)
+        val finalPlayer = playerWithXp.copy(
+            attributes = newAttributes,
+            lastSyncTime = syncTime
+        )
+
+        return finalPlayer.copy(rank = evaluateRank(finalPlayer))
+    }
 }
