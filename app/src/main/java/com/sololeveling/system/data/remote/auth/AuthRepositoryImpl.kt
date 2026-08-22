@@ -1,0 +1,68 @@
+package com.sololeveling.system.data.remote.auth
+
+import android.content.Context
+import android.content.Intent
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.sololeveling.system.domain.repository.AuthRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class AuthRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context
+) : AuthRepository {
+
+    private val firebaseAuth = FirebaseAuth.getInstance()
+
+    private val googleSignInClient: GoogleSignInClient by lazy {
+        GoogleSignIn.getClient(
+            context,
+            GoogleSignInOptions.DEFAULT_SIGN_IN
+        )
+    }
+
+    override val authState: Flow<FirebaseUser?> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            trySend(auth.currentUser)
+        }
+        firebaseAuth.addAuthStateListener(listener)
+        awaitClose {
+            firebaseAuth.removeAuthStateListener(listener)
+        }
+    }
+
+    override fun getCurrentUser(): FirebaseUser? {
+        return firebaseAuth.currentUser
+    }
+
+    override fun getGoogleSignInIntent(): Intent {
+        return googleSignInClient.signInIntent
+    }
+
+    override suspend fun handleSignInResult(data: Intent?): Result<FirebaseUser> {
+        return try {
+            val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(data)
+            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
+            Result.success(authResult.user!!)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun signOut() {
+        googleSignInClient.signOut().await()
+        firebaseAuth.signOut()
+    }
+}

@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.sololeveling.system.app-mergeDebugResources-64:/values-en-rAU/values-en-rAU.xml",
+            "outputFile": "com.sololeveling.system.app-mergeDebugResources-65:/values-en-rAU/values-en-rAU.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Lenovo\\.gradle\\caches\\transforms-3\\b80002a7c7126b239c20e8255ec790fb\\transformed\\ui-release\\res\\values-en-rAU\\values-en-rAU.xml",

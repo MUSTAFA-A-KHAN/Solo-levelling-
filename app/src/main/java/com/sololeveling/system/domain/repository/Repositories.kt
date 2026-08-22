@@ -1,5 +1,7 @@
 package com.sololeveling.system.domain.repository
 
+import android.content.Intent
+import com.google.firebase.auth.FirebaseUser
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.domain.model.SystemEvent
@@ -23,4 +25,12 @@ interface SystemEventRepository {
     fun getUnreadEventCount(): Flow<Int>
     suspend fun addEvent(event: SystemEvent)
     suspend fun markAllAsRead()
+}
+
+interface AuthRepository {
+    val authState: Flow<FirebaseUser?>
+    fun getCurrentUser(): FirebaseUser?
+    fun getGoogleSignInIntent(): Intent
+    suspend fun handleSignInResult(data: Intent?): Result<FirebaseUser>
+    suspend fun signOut()
 }

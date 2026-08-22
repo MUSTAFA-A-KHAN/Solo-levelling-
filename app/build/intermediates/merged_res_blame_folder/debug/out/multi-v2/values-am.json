@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.sololeveling.system.app-mergeDebugResources-64:/values-am/values-am.xml",
+            "outputFile": "com.sololeveling.system.app-mergeDebugResources-65:/values-am/values-am.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Lenovo\\.gradle\\caches\\transforms-3\\b80002a7c7126b239c20e8255ec790fb\\transformed\\ui-release\\res\\values-am\\values-am.xml",

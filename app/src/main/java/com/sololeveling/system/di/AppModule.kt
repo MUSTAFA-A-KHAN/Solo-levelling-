@@ -5,8 +5,10 @@ import androidx.room.Room
 import com.sololeveling.system.data.local.SystemDatabase
 import com.sololeveling.system.data.local.dao.PlayerDao
 import com.sololeveling.system.data.local.dao.QuestDao
+import com.sololeveling.system.data.remote.auth.AuthRepositoryImpl
 import com.sololeveling.system.data.repository.PlayerRepositoryImpl
 import com.sololeveling.system.data.repository.QuestRepositoryImpl
+import com.sololeveling.system.domain.repository.AuthRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import com.sololeveling.system.domain.repository.QuestRepository
 import com.sololeveling.system.domain.usecase.ProgressionEngine
@@ -55,5 +57,11 @@ object AppModule {
     @Singleton
     fun provideProgressionEngine(): ProgressionEngine {
         return ProgressionEngine()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository {
+        return AuthRepositoryImpl(context)
     }
 }
