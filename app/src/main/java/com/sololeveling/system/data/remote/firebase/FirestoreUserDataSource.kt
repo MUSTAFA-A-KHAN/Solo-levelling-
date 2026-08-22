@@ -1,8 +1,12 @@
 package com.sololeveling.system.data.remote.firebase
 
+import android.util.Log
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.tasks.await
+import java.net.UnknownHostException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -12,38 +16,77 @@ class FirestoreUserDataSource @Inject constructor() {
     private val firestore = FirebaseFirestore.getInstance()
 
     suspend fun upsertAccount(user: FirebaseUser) {
-        val docRef = firestore
-            .collection(USERS_COLLECTION)
-            .document(user.uid)
-            .collection(ACCOUNT_SUBCOLLECTION)
-            .document(ACCOUNT_DOC_ID)
+        val now = System.currentTimeMillis()
+        val accountId = user.uid
+        val displayName = user.displayName ?: ""
+        val email = user.email ?: ""
+        val photoUrl = user.photoUrl?.toString() ?: ""
 
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(docRef)
-            val now = System.currentTimeMillis()
+        var createdAt: Long? = null
 
-            if (snapshot.exists()) {
-                transaction.update(
-                    docRef,
-                    mapOf(
-                        FIELD_DISPLAY_NAME to (user.displayName ?: ""),
-                        FIELD_EMAIL to (user.email ?: ""),
-                        FIELD_PHOTO_URL to (user.photoUrl?.toString() ?: ""),
-                        FIELD_LAST_LOGIN_AT to now
-                    )
-                )
-            } else {
-                val account = AccountDocument(
-                    uid = user.uid,
-                    displayName = user.displayName ?: "",
-                    email = user.email ?: "",
-                    photoUrl = user.photoUrl?.toString() ?: "",
-                    createdAt = now,
-                    lastLoginAt = now
-                )
-                transaction.set(docRef, account)
+        val snapshot = kotlin.runCatching {
+            firestore
+                .collection(USERS_COLLECTION)
+                .document(accountId)
+                .collection(ACCOUNT_SUBCOLLECTION)
+                .document(ACCOUNT_DOC_ID)
+                .get()
+                .await()
+        }
+
+        if (snapshot.isSuccess && snapshot.getOrNull()?.exists() == true) {
+            createdAt = snapshot.getOrNull()!!.getLong(FIELD_CREATED_AT) ?: now
+        } else {
+            createdAt = createdAt ?: now
+        }
+
+        val account = AccountDocument(
+            uid = accountId,
+            displayName = displayName,
+            email = email,
+            photoUrl = photoUrl,
+            createdAt = createdAt,
+            lastLoginAt = now
+        )
+
+        retryOnConnectivityError {
+            firestore
+                .collection(USERS_COLLECTION)
+                .document(accountId)
+                .collection(ACCOUNT_SUBCOLLECTION)
+                .document(ACCOUNT_DOC_ID)
+                .set(account)
+                .await()
+        }
+    }
+
+    private suspend fun <T> retryOnConnectivityError(
+        maxRetries: Int = 3,
+        block: suspend () -> T
+    ): T {
+        var lastException: Exception? = null
+        for (attempt in 0..maxRetries) {
+            try {
+                return block()
+            } catch (e: Exception) {
+                lastException = e
+                if (isConnectivityRelated(e) && attempt < maxRetries) {
+                    val delayMs = (1L shl attempt) * 1000L
+                    kotlinx.coroutines.delay(delayMs)
+                } else {
+                    throw e
+                }
             }
-        }.await()
+        }
+        throw lastException!!
+    }
+
+    private fun isConnectivityRelated(e: Exception): Boolean {
+        return e is FirebaseFirestoreException &&
+            e.code == FirebaseFirestoreException.Code.UNAVAILABLE ||
+            e is FirebaseNetworkException ||
+            e is UnknownHostException ||
+            e.cause is UnknownHostException
     }
 
     companion object {
@@ -54,5 +97,6 @@ class FirestoreUserDataSource @Inject constructor() {
         private const val FIELD_EMAIL = "email"
         private const val FIELD_PHOTO_URL = "photoUrl"
         private const val FIELD_LAST_LOGIN_AT = "lastLoginAt"
+        private const val FIELD_CREATED_AT = "createdAt"
     }
 }
