@@ -62,7 +62,11 @@ class MainActivity : ComponentActivity() {
                             }
 
                             if (hasFirebaseUser) {
-                                authRepository.syncAccountOnLaunch()
+                                try {
+                                    authRepository.syncAccountOnLaunch()
+                                } catch (e: Exception) {
+                                    android.util.Log.e("MainActivity", "Account sync on launch failed; continuing offline", e)
+                                }
                             }
                         }
                     }
