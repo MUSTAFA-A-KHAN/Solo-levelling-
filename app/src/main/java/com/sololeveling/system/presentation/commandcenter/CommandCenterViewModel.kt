@@ -95,11 +95,16 @@ class CommandCenterViewModel @Inject constructor(
     private fun syncPlayer(uid: String) {
         viewModelScope.launch {
             _syncUiState.value = PlayerSyncUiState.Syncing
-            val result = playerRepository.syncWithFirestore(uid)
-            questRepository.syncWithFirestore(uid)
-            _syncUiState.value = when (result) {
-                is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
-                else -> PlayerSyncUiState.Resolved
+            try {
+                val result = playerRepository.syncWithFirestore(uid)
+                questRepository.syncWithFirestore(uid)
+                _syncUiState.value = when (result) {
+                    is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
+                    else -> PlayerSyncUiState.Resolved
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("CommandCenterViewModel", "Firestore sync failed; continuing offline", e)
+                _syncUiState.value = PlayerSyncUiState.Resolved
             }
         }
     }
@@ -107,7 +112,11 @@ class CommandCenterViewModel @Inject constructor(
     fun confirmRemoteOverride() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUser()?.uid ?: return@launch
-            playerRepository.forceDownloadFromFirestore(uid)
+            try {
+                playerRepository.forceDownloadFromFirestore(uid)
+            } catch (e: Exception) {
+                android.util.Log.e("CommandCenterViewModel", "Force download from Firestore failed", e)
+            }
             _syncUiState.value = PlayerSyncUiState.Resolved
         }
     }
