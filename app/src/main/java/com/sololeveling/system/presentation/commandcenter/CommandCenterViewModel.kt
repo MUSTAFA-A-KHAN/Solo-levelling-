@@ -96,6 +96,7 @@ class CommandCenterViewModel @Inject constructor(
         viewModelScope.launch {
             _syncUiState.value = PlayerSyncUiState.Syncing
             val result = playerRepository.syncWithFirestore(uid)
+            questRepository.syncWithFirestore(uid)
             _syncUiState.value = when (result) {
                 is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
                 else -> PlayerSyncUiState.Resolved

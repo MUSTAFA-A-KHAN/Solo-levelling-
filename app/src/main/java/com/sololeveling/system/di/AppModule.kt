@@ -7,6 +7,7 @@ import com.sololeveling.system.data.local.dao.PlayerDao
 import com.sololeveling.system.data.local.dao.QuestDao
 import com.sololeveling.system.data.remote.auth.AuthRepositoryImpl
 import com.sololeveling.system.data.remote.firebase.FirestorePlayerDataSource
+import com.sololeveling.system.data.remote.firebase.FirestoreQuestDataSource
 import com.sololeveling.system.data.remote.firebase.FirestoreUserDataSource
 import com.sololeveling.system.data.repository.PlayerRepositoryImpl
 import com.sololeveling.system.data.repository.QuestRepositoryImpl
@@ -56,8 +57,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideQuestRepository(questDao: QuestDao): QuestRepository {
-        return QuestRepositoryImpl(questDao)
+    fun provideQuestRepository(
+        questDao: QuestDao,
+        firestoreQuestDataSource: FirestoreQuestDataSource,
+        authRepository: AuthRepository
+    ): QuestRepository {
+        return QuestRepositoryImpl(questDao, firestoreQuestDataSource, authRepository)
     }
 
     @Provides
