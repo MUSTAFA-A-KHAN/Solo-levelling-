@@ -33,4 +33,9 @@ interface AuthRepository {
     fun getGoogleSignInIntent(): Intent
     suspend fun handleSignInResult(data: Intent?): Result<FirebaseUser>
     suspend fun signOut()
+    suspend fun syncAccountOnLaunch()
+}
+
+interface UserRepository {
+    suspend fun createOrUpdateAccount(user: FirebaseUser)
 }

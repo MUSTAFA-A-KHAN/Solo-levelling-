@@ -60,6 +60,10 @@ class MainActivity : ComponentActivity() {
                                 !hasPlayer -> "awakening"
                                 else -> "command_center"
                             }
+
+                            if (hasFirebaseUser) {
+                                authRepository.syncAccountOnLaunch()
+                            }
                         }
                     }
 

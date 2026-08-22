@@ -10,6 +10,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.sololeveling.system.R
 import com.sololeveling.system.domain.repository.AuthRepository
+import com.sololeveling.system.domain.repository.UserRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val userRepository: UserRepository
 ) : AuthRepository {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
@@ -57,9 +59,17 @@ class AuthRepositoryImpl @Inject constructor(
             val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
-            Result.success(authResult.user!!)
+            val user = authResult.user ?: throw IllegalStateException("Firebase user is null after sign-in")
+            userRepository.createOrUpdateAccount(user)
+            Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override suspend fun syncAccountOnLaunch() {
+        getCurrentUser()?.let { user ->
+            userRepository.createOrUpdateAccount(user)
         }
     }
 

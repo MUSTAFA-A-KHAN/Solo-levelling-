@@ -6,11 +6,14 @@ import com.sololeveling.system.data.local.SystemDatabase
 import com.sololeveling.system.data.local.dao.PlayerDao
 import com.sololeveling.system.data.local.dao.QuestDao
 import com.sololeveling.system.data.remote.auth.AuthRepositoryImpl
+import com.sololeveling.system.data.remote.firebase.FirestoreUserDataSource
 import com.sololeveling.system.data.repository.PlayerRepositoryImpl
 import com.sololeveling.system.data.repository.QuestRepositoryImpl
+import com.sololeveling.system.data.repository.UserRepositoryImpl
 import com.sololeveling.system.domain.repository.AuthRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import com.sololeveling.system.domain.repository.QuestRepository
+import com.sololeveling.system.domain.repository.UserRepository
 import com.sololeveling.system.domain.usecase.ProgressionEngine
 import dagger.Module
 import dagger.Provides
@@ -61,7 +64,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(@ApplicationContext context: Context): AuthRepository {
-        return AuthRepositoryImpl(context)
+    fun provideAuthRepository(@ApplicationContext context: Context, userRepository: UserRepository): AuthRepository {
+        return AuthRepositoryImpl(context, userRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(firestoreUserDataSource: FirestoreUserDataSource): UserRepository {
+        return UserRepositoryImpl(firestoreUserDataSource)
     }
 }
