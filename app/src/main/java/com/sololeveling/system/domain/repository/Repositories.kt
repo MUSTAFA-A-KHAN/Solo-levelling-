@@ -2,9 +2,11 @@ package com.sololeveling.system.domain.repository
 
 import android.content.Intent
 import com.google.firebase.auth.FirebaseUser
+import com.sololeveling.system.domain.model.LeaderboardEntry
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerSyncResult
 import com.sololeveling.system.domain.model.Quest
+import com.sololeveling.system.domain.model.QuestType
 import com.sololeveling.system.domain.model.SystemEvent
 import kotlinx.coroutines.flow.Flow
 
@@ -21,6 +23,7 @@ interface QuestRepository {
     fun getCompletedQuests(): Flow<List<Quest>>
     suspend fun updateQuest(quest: Quest)
     suspend fun addQuest(quest: Quest)
+    suspend fun deleteQuestsByType(type: QuestType)
     suspend fun syncWithFirestore(uid: String)
 }
 
@@ -42,4 +45,9 @@ interface AuthRepository {
 
 interface UserRepository {
     suspend fun createOrUpdateAccount(user: FirebaseUser)
+}
+
+interface LeaderboardRepository {
+    fun getLeaderboard(): Flow<List<LeaderboardEntry>>
+    suspend fun updateMyEntry(player: Player, completedQuests: Int)
 }

@@ -3,6 +3,7 @@ package com.sololeveling.system.presentation.awakening
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,8 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.sololeveling.system.R
 import kotlinx.coroutines.delay
 
 @Composable
@@ -39,6 +43,14 @@ fun AwakeningScreen(
             },
         contentAlignment = Alignment.Center
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.img_awakening),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .alpha(0.3f)
+        )
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,

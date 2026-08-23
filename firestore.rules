@@ -15,9 +15,17 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
-      match /quests/{docId} {
+       match /quests/{docId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+    }
+
+    // Global leaderboard: each user owns their own entry (doc id = uid).
+    // All authenticated users can read the full collection for rankings;
+    // users can only create/update/delete their own entry.
+    match /leaderboard/{userId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

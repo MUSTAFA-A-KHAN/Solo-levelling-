@@ -4,6 +4,8 @@ import com.sololeveling.system.domain.model.*
 import com.sololeveling.system.domain.repository.PlayerRepository
 import com.sololeveling.system.domain.repository.QuestRepository
 import kotlinx.coroutines.flow.firstOrNull
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 class QuestSyncUseCase @Inject constructor(
@@ -12,33 +14,62 @@ class QuestSyncUseCase @Inject constructor(
     private val progressionEngine: ProgressionEngine
 ) {
 
-    suspend fun syncQuestsWithHealthData(steps: Long, workoutMinutes: Long) {
+    companion object {
+        private const val FIRST_MOVEMENT_CUTOFF_HOUR = 10
+        private const val EVENING_START_HOUR = 18
+    }
+
+    suspend fun syncQuestsWithHealthData(snapshot: HealthSnapshot) {
         val activeQuests = questRepository.getActiveQuests().firstOrNull() ?: return
         var player = playerRepository.getPlayer().firstOrNull() ?: return
 
+        val firstMovementCutoff = LocalDate.now()
+            .atTime(FIRST_MOVEMENT_CUTOFF_HOUR, 0)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+        val eveningStart = LocalDate.now()
+            .atTime(EVENING_START_HOUR, 0)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
         activeQuests.forEach { quest ->
-            val req = quest.requiredActivity
-            if (req != null) {
-                var newCurrentValue = req.currentValue
+            val req = quest.requiredActivity ?: return@forEach
 
-                when (req.activityType) {
-                    ActivityType.STEPS -> newCurrentValue += steps
-                    ActivityType.WORKOUT_DURATION_MINUTES -> newCurrentValue += workoutMinutes
-                    else -> {} // Manual sync types ignored here
+            val newCurrentValue = when (req.activityType) {
+                ActivityType.STEPS -> snapshot.steps.toDouble()
+                ActivityType.WORKOUT_DURATION_MINUTES -> snapshot.workoutMinutes.toDouble()
+                ActivityType.RUNNING_DISTANCE_METERS -> 0.0
+                ActivityType.STUDY_MINUTES -> 0.0
+                ActivityType.SLEEP_MINUTES -> snapshot.sleepMinutes.toDouble()
+                ActivityType.EXERCISE_SESSIONS -> snapshot.exerciseSessions.toDouble()
+                ActivityType.EVENING_STEPS -> snapshot.eveningSteps.toDouble()
+                ActivityType.FIRST_MOVEMENT -> {
+                    if (snapshot.firstActivityTime != null &&
+                        snapshot.firstActivityTime <= firstMovementCutoff
+                    ) {
+                        1.0
+                    } else {
+                        0.0
+                    }
                 }
+            }
 
-                if (newCurrentValue > req.currentValue) {
-                    val isCompleted = newCurrentValue >= req.targetValue
-                    val updatedQuest = quest.copy(
+            val isCompleted = newCurrentValue >= req.targetValue
+            val wasCompleted = quest.isCompleted
+
+            if (newCurrentValue != req.currentValue || isCompleted != wasCompleted) {
+                questRepository.updateQuest(
+                    quest.copy(
                         requiredActivity = req.copy(currentValue = newCurrentValue),
                         isCompleted = isCompleted
                     )
+                )
 
-                    questRepository.updateQuest(updatedQuest)
-
-                    if (isCompleted) {
-                        player = applyQuestRewards(player, updatedQuest)
-                    }
+                if (isCompleted && !wasCompleted) {
+                    player = applyQuestRewards(player, quest)
                 }
             }
         }
@@ -54,16 +85,17 @@ class QuestSyncUseCase @Inject constructor(
 
         val newCurrentValue = req.currentValue + addedValue
         val isCompleted = newCurrentValue >= req.targetValue
+        val wasCompleted = quest.isCompleted
 
-        val updatedQuest = quest.copy(
-            requiredActivity = req.copy(currentValue = newCurrentValue),
-            isCompleted = isCompleted
+        questRepository.updateQuest(
+            quest.copy(
+                requiredActivity = req.copy(currentValue = newCurrentValue),
+                isCompleted = isCompleted
+            )
         )
 
-        questRepository.updateQuest(updatedQuest)
-
-        if (isCompleted) {
-            player = applyQuestRewards(player, updatedQuest)
+        if (isCompleted && !wasCompleted) {
+            player = applyQuestRewards(player, quest)
             playerRepository.updatePlayer(player)
         }
     }

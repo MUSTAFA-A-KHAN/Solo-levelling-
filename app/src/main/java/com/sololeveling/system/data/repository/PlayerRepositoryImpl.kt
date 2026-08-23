@@ -6,6 +6,7 @@ import com.sololeveling.system.data.local.entity.toEntity
 import com.sololeveling.system.data.remote.firebase.FirestorePlayerDataSource
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerSyncResult
+import com.sololeveling.system.domain.repository.AuthRepository
 import com.sololeveling.system.domain.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 class PlayerRepositoryImpl @Inject constructor(
     private val playerDao: PlayerDao,
-    private val firestorePlayerDataSource: FirestorePlayerDataSource
+    private val firestorePlayerDataSource: FirestorePlayerDataSource,
+    private val authRepository: AuthRepository
 ) : PlayerRepository {
 
     override fun getPlayer(): Flow<Player?> {
@@ -25,6 +27,9 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override suspend fun updatePlayer(player: Player) {
         playerDao.updatePlayer(player.toEntity())
+        authRepository.getCurrentUser()?.uid?.let { uid ->
+            firestorePlayerDataSource.savePlayer(uid, player)
+        }
     }
 
     override suspend fun initializePlayer(name: String) {

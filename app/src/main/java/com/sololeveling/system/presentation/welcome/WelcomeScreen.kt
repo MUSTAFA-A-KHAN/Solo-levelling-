@@ -2,15 +2,18 @@ package com.sololeveling.system.presentation.welcome
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sololeveling.system.R
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.theme.SystemNeonBlue
@@ -63,6 +66,14 @@ fun WelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_arise_logo),
+                contentDescription = "Solo Leveling Arise",
+                modifier = Modifier
+                    .height(200.dp)
+                    .padding(bottom = 24.dp)
+            )
+
             Text(
                 text = "SYSTEM INITIALIZATION",
                 style = MaterialTheme.typography.displaySmall,
