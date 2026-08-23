@@ -2,6 +2,8 @@ package com.sololeveling.system.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.sololeveling.system.data.local.SystemDatabase
 import com.sololeveling.system.data.local.dao.PlayerDao
 import com.sololeveling.system.data.local.dao.QuestDao
@@ -38,7 +40,13 @@ object AppModule {
             context,
             SystemDatabase::class.java,
             "system_db"
-        ).fallbackToDestructiveMigration().build()
+        ).addMigrations(MIGRATION_2_3).fallbackToDestructiveMigration().build()
+    }
+
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE quest_table ADD COLUMN date TEXT NOT NULL DEFAULT ''")
+        }
     }
 
     @Provides

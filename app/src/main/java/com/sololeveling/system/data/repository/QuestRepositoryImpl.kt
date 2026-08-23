@@ -46,6 +46,39 @@ class QuestRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getActiveQuestsForDate(date: String, weekString: String): Flow<List<Quest>> {
+        return questDao.getActiveQuestsForDate(date, weekString).map { entities ->
+            entities.map { entity ->
+                entity.toDomain(
+                    attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),
+                    requiredActivity = gson.fromJson(entity.requiredActivityJson, ActivityRequirement::class.java)
+                )
+            }
+        }
+    }
+
+    override fun getCompletedQuestsForDate(date: String, weekString: String): Flow<List<Quest>> {
+        return questDao.getCompletedQuestsForDate(date, weekString).map { entities ->
+            entities.map { entity ->
+                entity.toDomain(
+                    attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),
+                    requiredActivity = gson.fromJson(entity.requiredActivityJson, ActivityRequirement::class.java)
+                )
+            }
+        }
+    }
+
+    override fun getAllQuests(): Flow<List<Quest>> {
+        return questDao.getAllQuests().map { entities ->
+            entities.map { entity ->
+                entity.toDomain(
+                    attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),
+                    requiredActivity = gson.fromJson(entity.requiredActivityJson, ActivityRequirement::class.java)
+                )
+            }
+        }
+    }
+
     override suspend fun updateQuest(quest: Quest) {
         questDao.updateQuest(toEntity(quest))
         authRepository.getCurrentUser()?.uid?.let { uid ->
@@ -74,9 +107,22 @@ class QuestRepositoryImpl @Inject constructor(
         val localQuests = getAllLocalQuests()
         val remoteQuests = firestoreQuestDataSource.getQuests(uid)
         val merged = mergeQuests(localQuests, remoteQuests)
+        val fixed = merged.map { quest ->
+            if (quest.date.isBlank()) quest.copy(date = inferDateFromId(quest.id) ?: "") else quest
+        }
 
-        merged.forEach { quest -> questDao.insertQuest(toEntity(quest)) }
-        firestoreQuestDataSource.saveQuests(uid, merged)
+        fixed.forEach { questDao.insertQuest(toEntity(it)) }
+        firestoreQuestDataSource.saveQuests(uid, fixed)
+    }
+
+    private fun inferDateFromId(id: String): String? {
+        val parts = id.split("_")
+        return when {
+            id.startsWith("daily_") && parts.size >= 3 -> parts[1]
+            id.startsWith("short_") && parts.size >= 3 -> parts[1]
+            id.startsWith("weekly_") && parts.size >= 2 -> parts[1]
+            else -> null
+        }
     }
 
     private fun toEntity(quest: Quest) = quest.toEntity(

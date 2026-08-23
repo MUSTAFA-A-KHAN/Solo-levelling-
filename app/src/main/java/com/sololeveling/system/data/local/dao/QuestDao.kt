@@ -16,6 +16,15 @@ interface QuestDao {
     @Query("SELECT * FROM quest_table WHERE isCompleted = 1")
     fun getCompletedQuests(): Flow<List<QuestEntity>>
 
+    @Query("SELECT * FROM quest_table WHERE isCompleted = 0 AND (date = :date OR (type = 'WEEKLY' AND date = :weekString))")
+    fun getActiveQuestsForDate(date: String, weekString: String): Flow<List<QuestEntity>>
+
+    @Query("SELECT * FROM quest_table WHERE isCompleted = 1 AND (date = :date OR (type = 'WEEKLY' AND date = :weekString))")
+    fun getCompletedQuestsForDate(date: String, weekString: String): Flow<List<QuestEntity>>
+
+    @Query("SELECT * FROM quest_table ORDER BY date DESC")
+    fun getAllQuests(): Flow<List<QuestEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuest(quest: QuestEntity)
 

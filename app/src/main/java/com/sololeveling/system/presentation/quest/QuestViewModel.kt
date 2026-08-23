@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,6 +20,8 @@ class QuestViewModel @Inject constructor(
     private val questSyncUseCase: QuestSyncUseCase
 ) : ViewModel() {
 
+    private val today: String = LocalDate.now().toString()
+
     private val _activeQuests = MutableStateFlow<List<Quest>>(emptyList())
     val activeQuests: StateFlow<List<Quest>> = _activeQuests.asStateFlow()
 
@@ -26,14 +29,17 @@ class QuestViewModel @Inject constructor(
     val completedQuests: StateFlow<List<Quest>> = _completedQuests.asStateFlow()
 
     init {
+        val currentDate = java.time.LocalDate.now()
+        val weekString = "${currentDate.year}-W${currentDate.get(java.time.temporal.WeekFields.of(java.util.Locale.getDefault()).weekOfWeekBasedYear())}"
+        
         viewModelScope.launch {
-            questRepository.getActiveQuests().collectLatest { quests ->
+            questRepository.getActiveQuestsForDate(today, weekString).collectLatest { quests ->
                 _activeQuests.value = quests
             }
         }
 
         viewModelScope.launch {
-            questRepository.getCompletedQuests().collectLatest { quests ->
+            questRepository.getCompletedQuestsForDate(today, weekString).collectLatest { quests ->
                 _completedQuests.value = quests
             }
         }

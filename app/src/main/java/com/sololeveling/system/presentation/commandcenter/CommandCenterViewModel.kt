@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.WeekFields
+import java.util.Locale
 
 data class DailyHealthData(
     val steps: Long = 0,
@@ -81,7 +83,9 @@ class CommandCenterViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            questRepository.getActiveQuests().collectLatest { quests ->
+            val currentDate = LocalDate.now()
+            val weekString = "${currentDate.year}-W${currentDate.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear())}"
+            questRepository.getActiveQuestsForDate(LocalDate.now().toString(), weekString).collectLatest { quests ->
                 _activeQuests.value = quests
             }
         }
