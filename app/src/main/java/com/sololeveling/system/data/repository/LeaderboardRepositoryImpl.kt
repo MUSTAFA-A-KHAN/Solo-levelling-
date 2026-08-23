@@ -28,7 +28,7 @@ class LeaderboardRepositoryImpl @Inject constructor(
 
         val entry = LeaderboardEntry(
             uid = user.uid,
-            displayName = user.displayName ?: player.name,
+            displayName = player.name ?:user.displayName ?: "Unknown",
             photoUrl = user.photoUrl?.toString() ?: "",
             rank = player.rank,
             level = player.level,
