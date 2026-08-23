@@ -196,24 +196,25 @@ class CommandCenterViewModel @Inject constructor(
 
     fun syncHealthData() {
         viewModelScope.launch {
-            val currentPlayer = _playerState.value ?: run {
-                _connectionStatus.value = ConnectionStatus.Failed("Player not initialized")
-                return@launch
-            }
-
-            if (!healthConnectManager.isHealthConnectAvailable()) {
-                _connectionStatus.value =
-                    ConnectionStatus.Failed("Health Connect is not available on this device")
-                return@launch
-            }
-
-            if (!healthConnectManager.hasAllPermissions()) {
-                _uiEvent.emit(UiEvent.RequestHealthPermissions(healthConnectManager.requiredPermissions))
-                return@launch
-            }
-
-            _connectionStatus.value = ConnectionStatus.Syncing
             try {
+                val currentPlayer = _playerState.value ?: run {
+                    _connectionStatus.value = ConnectionStatus.Failed("Player not initialized")
+                    return@launch
+                }
+
+                if (!healthConnectManager.isHealthConnectAvailable()) {
+                    _connectionStatus.value =
+                        ConnectionStatus.Failed("Health Connect is not available on this device")
+                    return@launch
+                }
+
+                if (!healthConnectManager.hasAllPermissions()) {
+                    _uiEvent.emit(UiEvent.RequestHealthPermissions(healthConnectManager.requiredPermissions))
+                    return@launch
+                }
+
+                _connectionStatus.value = ConnectionStatus.Syncing
+
                 // Sync data since the last tracked sync.
                 // If the user has 0 XP (just installed before the fix), fallback to the start of today
                 // so they don't miss out on today's earlier steps.

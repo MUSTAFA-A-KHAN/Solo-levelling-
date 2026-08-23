@@ -27,13 +27,23 @@ class HealthConnectManager @Inject constructor(
     )
 
     suspend fun hasAllPermissions(): Boolean {
-        if (!isAvailable()) return false
-        val granted = healthConnectClient.permissionController.getGrantedPermissions()
-        return granted.containsAll(requiredPermissions)
+        return try {
+            if (!isAvailable()) return false
+            val granted = healthConnectClient.permissionController.getGrantedPermissions()
+            granted.containsAll(requiredPermissions)
+        } catch (e: Exception) {
+            android.util.Log.w("HealthConnectManager", "hasAllPermissions failed", e)
+            false
+        }
     }
 
     private fun isAvailable(): Boolean {
-        return HealthConnectClient.sdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
+        return try {
+            HealthConnectClient.sdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
+        } catch (e: Exception) {
+            android.util.Log.w("HealthConnectManager", "sdkStatus check failed", e)
+            false
+        }
     }
 
     fun isHealthConnectAvailable(): Boolean = isAvailable()
