@@ -21,8 +21,8 @@ interface PlayerRepository {
 interface QuestRepository {
     fun getActiveQuests(): Flow<List<Quest>>
     fun getCompletedQuests(): Flow<List<Quest>>
-    fun getActiveQuestsForDate(date: String): Flow<List<Quest>>
-    fun getCompletedQuestsForDate(date: String): Flow<List<Quest>>
+    fun getActiveQuestsForDate(date: String, weekString: String): Flow<List<Quest>>
+    fun getCompletedQuestsForDate(date: String, weekString: String): Flow<List<Quest>>
     fun getAllQuests(): Flow<List<Quest>>
     suspend fun updateQuest(quest: Quest)
     suspend fun addQuest(quest: Quest)

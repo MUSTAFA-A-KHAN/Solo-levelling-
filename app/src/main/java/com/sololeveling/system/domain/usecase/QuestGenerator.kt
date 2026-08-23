@@ -33,7 +33,6 @@ class QuestGenerator @Inject constructor(
         }
 
         if (lastWeeklyDate != weekString) {
-            questRepository.deleteQuestsByType(QuestType.WEEKLY)
             generateWeeklyQuest(weekString)
             preferences.setLastWeeklyQuestDate(weekString)
         }

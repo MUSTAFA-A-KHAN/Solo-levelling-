@@ -46,8 +46,8 @@ class QuestRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getActiveQuestsForDate(date: String): Flow<List<Quest>> {
-        return questDao.getActiveQuestsForDate(date).map { entities ->
+    override fun getActiveQuestsForDate(date: String, weekString: String): Flow<List<Quest>> {
+        return questDao.getActiveQuestsForDate(date, weekString).map { entities ->
             entities.map { entity ->
                 entity.toDomain(
                     attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),
@@ -57,8 +57,8 @@ class QuestRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getCompletedQuestsForDate(date: String): Flow<List<Quest>> {
-        return questDao.getCompletedQuestsForDate(date).map { entities ->
+    override fun getCompletedQuestsForDate(date: String, weekString: String): Flow<List<Quest>> {
+        return questDao.getCompletedQuestsForDate(date, weekString).map { entities ->
             entities.map { entity ->
                 entity.toDomain(
                     attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),

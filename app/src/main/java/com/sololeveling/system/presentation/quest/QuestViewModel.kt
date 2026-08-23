@@ -29,14 +29,17 @@ class QuestViewModel @Inject constructor(
     val completedQuests: StateFlow<List<Quest>> = _completedQuests.asStateFlow()
 
     init {
+        val currentDate = java.time.LocalDate.now()
+        val weekString = "${currentDate.year}-W${currentDate.get(java.time.temporal.WeekFields.of(java.util.Locale.getDefault()).weekOfWeekBasedYear())}"
+        
         viewModelScope.launch {
-            questRepository.getActiveQuestsForDate(today).collectLatest { quests ->
+            questRepository.getActiveQuestsForDate(today, weekString).collectLatest { quests ->
                 _activeQuests.value = quests
             }
         }
 
         viewModelScope.launch {
-            questRepository.getCompletedQuestsForDate(today).collectLatest { quests ->
+            questRepository.getCompletedQuestsForDate(today, weekString).collectLatest { quests ->
                 _completedQuests.value = quests
             }
         }
