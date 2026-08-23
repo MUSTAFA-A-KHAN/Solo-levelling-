@@ -142,6 +142,7 @@ class HealthConnectManager @Inject constructor(
 
     suspend fun getStepsInRange(startMs: Long, endMs: Long): Long {
         if (!hasAllPermissions()) return 0
+        if (startMs >= endMs) return 0
 
         val timeRange = TimeRangeFilter.between(
             Instant.ofEpochMilli(startMs),
