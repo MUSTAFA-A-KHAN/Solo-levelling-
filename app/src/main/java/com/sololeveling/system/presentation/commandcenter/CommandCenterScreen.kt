@@ -477,6 +477,7 @@ fun ShadowArmyPanel() {
                     drawable = R.drawable.img_baro,
                     label = "BARO"
                 )
+            }
         }
 
     }
