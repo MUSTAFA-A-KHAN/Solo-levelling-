@@ -3,9 +3,11 @@ package com.sololeveling.system.presentation.commandcenter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -20,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
+import com.sololeveling.system.R
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.HolographicProgressBar
 import com.sololeveling.system.presentation.components.RankEmblem
@@ -177,6 +181,10 @@ fun CommandCenterScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             DailyQuestOverview(activeQuests)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ShadowArmyPanel()
 
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -427,5 +435,64 @@ fun DailyQuestOverview(quests: List<Quest>) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ShadowArmyPanel() {
+    SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "SHADOW ARMY",
+                style = MaterialTheme.typography.labelLarge,
+                color = SystemNeonPurple,
+                letterSpacing = 2.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CharacterPortrait(
+                    modifier = Modifier.weight(1f),
+                    drawable = R.drawable.img_cha_hae_in,
+                    label = "CHA HAE-IN"
+                )
+                CharacterPortrait(
+                    modifier = Modifier.weight(1f),
+                    drawable = R.drawable.img_igris,
+                    label = "IGRIS"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CharacterPortrait(
+    modifier: Modifier = Modifier,
+    drawable: Int,
+    label: String
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = drawable),
+            contentDescription = label,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .clip(RoundedCornerShape(12.dp))
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

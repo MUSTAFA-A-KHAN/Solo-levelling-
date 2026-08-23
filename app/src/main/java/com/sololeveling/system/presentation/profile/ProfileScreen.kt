@@ -3,10 +3,13 @@ package com.sololeveling.system.presentation.profile
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -15,12 +18,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sololeveling.system.R
 import com.google.firebase.auth.FirebaseUser
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerAttributes
@@ -202,6 +207,16 @@ fun IdentityPanel(player: Player) {
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Image(
+                    painter = painterResource(id = R.drawable.img_jinwoo),
+                    contentDescription = "Player character",
+                    modifier = Modifier
+                        .size(88.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
