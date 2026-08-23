@@ -466,7 +466,19 @@ fun ShadowArmyPanel() {
                     label = "IGRIS"
                 )
             }
+
+             Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CharacterPortrait(
+                    modifier = Modifier.weight(1f),
+                    drawable = R.drawable.img_baro,
+                    label = "BARO"
+                )
         }
+
     }
 }
 
