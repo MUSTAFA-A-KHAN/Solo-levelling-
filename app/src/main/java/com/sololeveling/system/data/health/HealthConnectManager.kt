@@ -36,6 +36,8 @@ class HealthConnectManager @Inject constructor(
         return HealthConnectClient.sdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
     }
 
+    fun isHealthConnectAvailable(): Boolean = isAvailable()
+
     suspend fun getRecentSteps(since: Long): Long {
         if (!hasAllPermissions()) return 0
 

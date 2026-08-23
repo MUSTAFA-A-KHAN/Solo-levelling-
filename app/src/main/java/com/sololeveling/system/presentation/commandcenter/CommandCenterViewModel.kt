@@ -150,17 +150,21 @@ class CommandCenterViewModel @Inject constructor(
     private suspend fun fetchDailyHealthData() {
         if (!healthConnectManager.hasAllPermissions()) return
 
-        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val snapshot = buildDailyHealthSnapshot(startOfDay)
+        try {
+            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val snapshot = buildDailyHealthSnapshot(startOfDay)
 
-        _dailyHealthData.value = DailyHealthData(
-            steps = snapshot.steps,
-            workoutMinutes = snapshot.workoutMinutes,
-            caloriesBurned = healthConnectManager.getRecentCaloriesBurned(startOfDay),
-            sleepMinutes = snapshot.sleepMinutes
-        )
+            _dailyHealthData.value = DailyHealthData(
+                steps = snapshot.steps,
+                workoutMinutes = snapshot.workoutMinutes,
+                caloriesBurned = healthConnectManager.getRecentCaloriesBurned(startOfDay),
+                sleepMinutes = snapshot.sleepMinutes
+            )
 
-        questSyncUseCase.syncQuestsWithHealthData(snapshot)
+            questSyncUseCase.syncQuestsWithHealthData(snapshot)
+        } catch (e: Exception) {
+            android.util.Log.e("CommandCenterViewModel", "Failed to fetch daily health data", e)
+        }
     }
 
     private suspend fun buildDailyHealthSnapshot(startOfDay: Long): HealthSnapshot {
@@ -192,35 +196,52 @@ class CommandCenterViewModel @Inject constructor(
 
     fun syncHealthData() {
         viewModelScope.launch {
-            val currentPlayer = _playerState.value ?: return@launch
+            val currentPlayer = _playerState.value ?: run {
+                _connectionStatus.value = ConnectionStatus.Failed("Player not initialized")
+                return@launch
+            }
+
+            if (!healthConnectManager.isHealthConnectAvailable()) {
+                _connectionStatus.value =
+                    ConnectionStatus.Failed("Health Connect is not available on this device")
+                return@launch
+            }
 
             if (!healthConnectManager.hasAllPermissions()) {
                 _uiEvent.emit(UiEvent.RequestHealthPermissions(healthConnectManager.requiredPermissions))
                 return@launch
             }
 
-            // Sync data since the last tracked sync.
-            // If the user has 0 XP (just installed before the fix), fallback to the start of today
-            // so they don't miss out on today's earlier steps.
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val since = if (currentPlayer.xp == 0L && currentPlayer.lastSyncTime > startOfDay) {
-                startOfDay
-            } else {
-                currentPlayer.lastSyncTime
+            _connectionStatus.value = ConnectionStatus.Syncing
+            try {
+                // Sync data since the last tracked sync.
+                // If the user has 0 XP (just installed before the fix), fallback to the start of today
+                // so they don't miss out on today's earlier steps.
+                val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val since = if (currentPlayer.xp == 0L && currentPlayer.lastSyncTime > startOfDay) {
+                    startOfDay
+                } else {
+                    currentPlayer.lastSyncTime
+                }
+
+                val now = System.currentTimeMillis()
+
+                val steps = healthConnectManager.getRecentSteps(since)
+                val workoutMinutes = healthConnectManager.getRecentWorkoutDurationMinutes(since)
+
+                val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
+                playerRepository.updatePlayer(updatedPlayer)
+
+                questSyncUseCase.syncQuestsWithHealthData(buildDailyHealthSnapshot(startOfDay))
+
+                fetchDailyHealthData() // refresh the daily total shown on the dashboard
+                refreshLeaderboardEntry(updatedPlayer)
+
+                _connectionStatus.value = ConnectionStatus.Connected
+            } catch (e: Exception) {
+                android.util.Log.e("CommandCenterViewModel", "Health sync failed", e)
+                _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Health sync failed")
             }
-
-            val now = System.currentTimeMillis()
-
-            val steps = healthConnectManager.getRecentSteps(since)
-            val workoutMinutes = healthConnectManager.getRecentWorkoutDurationMinutes(since)
-
-            val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
-            playerRepository.updatePlayer(updatedPlayer)
-
-            questSyncUseCase.syncQuestsWithHealthData(buildDailyHealthSnapshot(startOfDay))
-
-            fetchDailyHealthData() // refresh the daily total shown on the dashboard
-            refreshLeaderboardEntry(updatedPlayer)
         }
     }
 

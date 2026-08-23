@@ -273,7 +273,7 @@ fun ConnectionStatusIndicator(
         if (shouldShowError && errorMessage != null) {
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "FIREBASE OFFLINE: $errorMessage",
+                text = "SYNC ERROR: $errorMessage",
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                 color = StatusError,
                 modifier = Modifier.clickable { onDismissError() }
