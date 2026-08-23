@@ -33,6 +33,7 @@ class QuestGenerator @Inject constructor(
         }
 
         if (lastWeeklyDate != weekString) {
+            questRepository.deleteQuestsByType(QuestType.WEEKLY)
             generateWeeklyQuest(weekString)
             preferences.setLastWeeklyQuestDate(weekString)
         }
@@ -203,7 +204,7 @@ class QuestGenerator @Inject constructor(
             description = "Consistent effort yields great results.",
             difficulty = QuestDifficulty.C,
                 type = QuestType.WEEKLY,
-                date = LocalDate.now().toString(),
+                date = weekString,
             isCompleted = false,
             xpReward = 1000,
             attributeRewards = mapOf(

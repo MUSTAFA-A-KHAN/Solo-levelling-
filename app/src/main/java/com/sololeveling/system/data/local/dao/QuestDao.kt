@@ -16,10 +16,10 @@ interface QuestDao {
     @Query("SELECT * FROM quest_table WHERE isCompleted = 1")
     fun getCompletedQuests(): Flow<List<QuestEntity>>
 
-    @Query("SELECT * FROM quest_table WHERE isCompleted = 0 AND (date = :date OR type = 'WEEKLY')")
+    @Query("SELECT * FROM quest_table WHERE isCompleted = 0 AND (date = :date OR date = '' OR type = 'WEEKLY')")
     fun getActiveQuestsForDate(date: String): Flow<List<QuestEntity>>
 
-    @Query("SELECT * FROM quest_table WHERE isCompleted = 1 AND (date = :date OR type = 'WEEKLY')")
+    @Query("SELECT * FROM quest_table WHERE isCompleted = 1 AND (date = :date OR date = '' OR type = 'WEEKLY')")
     fun getCompletedQuestsForDate(date: String): Flow<List<QuestEntity>>
 
     @Query("SELECT * FROM quest_table ORDER BY date DESC")
