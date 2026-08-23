@@ -116,15 +116,11 @@ class QuestRepositoryImpl @Inject constructor(
     }
 
     private fun inferDateFromId(id: String): String? {
+        val parts = id.split("_")
         return when {
-            id.startsWith("daily_") || id.startsWith("short_") -> {
-                val parts = id.split("_")
-                if (parts.size >= 3) parts[2] else null
-            }
-            id.startsWith("weekly_") -> {
-                val parts = id.split("_")
-                if (parts.size >= 2) parts[1] else null
-            }
+            id.startsWith("daily_") && parts.size >= 3 -> parts[1]
+            id.startsWith("short_") && parts.size >= 3 -> parts[1]
+            id.startsWith("weekly_") && parts.size >= 2 -> parts[1]
             else -> null
         }
     }
