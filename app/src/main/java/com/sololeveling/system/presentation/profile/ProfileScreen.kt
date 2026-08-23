@@ -12,11 +12,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +49,7 @@ fun ProfileScreen(
 ) {
     val player by viewModel.playerState.collectAsState()
     val authUser by viewModel.authUser.collectAsState()
+    val nameEditState by viewModel.nameEditState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
     val signInLauncher = rememberLauncherForActivityResult(
@@ -51,6 +57,17 @@ fun ProfileScreen(
     ) { result ->
         coroutineScope.launch {
             viewModel.handleSignInResult(result.data)
+        }
+    }
+
+    var showNameDialog by remember { mutableStateOf(false) }
+    var newNameInput by remember { mutableStateOf("") }
+
+    LaunchedEffect(nameEditState) {
+        if (nameEditState is ProfileViewModel.NameEditState.Success) {
+            showNameDialog = false
+            newNameInput = ""
+            viewModel.dismissNameEditResult()
         }
     }
 
@@ -89,13 +106,79 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 player?.let { p ->
-                    IdentityPanel(p)
+                    IdentityPanel(
+                        player = p,
+                        onEditName = {
+                            newNameInput = p.name
+                            showNameDialog = true
+                        }
+                    )
                     Spacer(modifier = Modifier.height(24.dp))
                     AttributesPanel(p.attributes, p.availableAttributePoints)
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
+    }
+
+    if (showNameDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (nameEditState !is ProfileViewModel.NameEditState.Saving) {
+                    showNameDialog = false
+                    viewModel.dismissNameEditResult()
+                }
+            },
+            title = { Text("EDIT HUNTER NAME", color = MaterialTheme.colorScheme.primary) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = newNameInput,
+                        onValueChange = { newNameInput = it },
+                        label = { Text("Display Name") },
+                        singleLine = true,
+                        enabled = nameEditState !is ProfileViewModel.NameEditState.Saving,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                    if (nameEditState is ProfileViewModel.NameEditState.Success) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Name updated successfully!",
+                            color = StatusSuccess,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.updatePlayerName(newNameInput) },
+                    enabled = nameEditState !is ProfileViewModel.NameEditState.Saving
+                ) {
+                    Text(
+                        text = if (nameEditState is ProfileViewModel.NameEditState.Saving) "SAVING..." else "SAVE",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showNameDialog = false
+                        viewModel.dismissNameEditResult()
+                    },
+                    enabled = nameEditState !is ProfileViewModel.NameEditState.Saving
+                ) {
+                    Text("CANCEL", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -175,7 +258,7 @@ fun AccountSection(
 }
 
 @Composable
-fun IdentityPanel(player: Player) {
+fun IdentityPanel(player: Player, onEditName: () -> Unit = {}) {
     SystemPanel(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -192,11 +275,23 @@ fun IdentityPanel(player: Player) {
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        text = player.name.uppercase(),
-                        style = MaterialTheme.typography.displayMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { onEditName() }
+                    ) {
+                        Text(
+                            text = player.name.uppercase(),
+                            style = MaterialTheme.typography.displayMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit name",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
 
                     player.title?.let { title ->
                         Spacer(modifier = Modifier.height(4.dp))
