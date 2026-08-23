@@ -81,7 +81,7 @@ class CommandCenterViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            questRepository.getActiveQuests().collectLatest { quests ->
+            questRepository.getActiveQuestsForDate(LocalDate.now().toString()).collectLatest { quests ->
                 _activeQuests.value = quests
             }
         }

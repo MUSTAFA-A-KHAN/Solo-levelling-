@@ -23,6 +23,7 @@ import com.sololeveling.system.presentation.commandcenter.CommandCenterViewModel
 import com.sololeveling.system.presentation.leaderboard.LeaderboardScreen
 import com.sololeveling.system.presentation.profile.ProfileScreen
 import com.sololeveling.system.presentation.quest.QuestScreen
+import com.sololeveling.system.presentation.history.HistoryScreen
 import com.sololeveling.system.presentation.theme.SystemTheme
 import com.sololeveling.system.presentation.welcome.WelcomeScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -124,11 +125,17 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
-                        composable("quests") {
-                            QuestScreen(
-                                onNavigateBack = { navController.popBackStack() }
-                            )
-                        }
+                         composable("quests") {
+                             QuestScreen(
+                                 onNavigateBack = { navController.popBackStack() },
+                                 onNavigateToHistory = { navController.navigate("history") }
+                             )
+                         }
+                         composable("history") {
+                             HistoryScreen(
+                                 onNavigateBack = { navController.popBackStack() }
+                             )
+                         }
                         }
                     }
                 }

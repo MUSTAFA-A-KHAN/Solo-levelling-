@@ -8,6 +8,7 @@ data class Quest(
     val id: String,
     val title: String,
     val description: String,
+    val date: String = "",
     val difficulty: QuestDifficulty = QuestDifficulty.E,
     val type: QuestType = QuestType.DAILY,
     val isCompleted: Boolean = false,

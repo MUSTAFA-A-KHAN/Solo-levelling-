@@ -46,6 +46,7 @@ class QuestGenerator @Inject constructor(
                 description = "Reach your personalized step target for today.",
                 difficulty = QuestDifficulty.E,
                 type = QuestType.SHORT,
+                date = dateString,
                 xpReward = 80,
                 attributeRewards = mapOf(AttributeType.ENDURANCE to 0.3, AttributeType.VITALITY to 0.2),
                 requiredActivity = ActivityRequirement(
@@ -60,6 +61,7 @@ class QuestGenerator @Inject constructor(
                 description = "Get your sleep target to restore your mana.",
                 difficulty = QuestDifficulty.E,
                 type = QuestType.SHORT,
+                date = dateString,
                 xpReward = 80,
                 attributeRewards = mapOf(AttributeType.INTELLIGENCE to 0.3, AttributeType.VITALITY to 0.2),
                 requiredActivity = ActivityRequirement(
@@ -74,6 +76,7 @@ class QuestGenerator @Inject constructor(
                 description = "Complete at least one exercise session.",
                 difficulty = QuestDifficulty.D,
                 type = QuestType.SHORT,
+                date = dateString,
                 xpReward = 100,
                 attributeRewards = mapOf(AttributeType.STRENGTH to 0.4, AttributeType.ENDURANCE to 0.3),
                 requiredActivity = ActivityRequirement(
@@ -88,6 +91,7 @@ class QuestGenerator @Inject constructor(
                 description = "Walk continuously for a sustained duration.",
                 difficulty = QuestDifficulty.D,
                 type = QuestType.SHORT,
+                date = dateString,
                 xpReward = 100,
                 attributeRewards = mapOf(AttributeType.ENDURANCE to 0.4, AttributeType.AGILITY to 0.2),
                 requiredActivity = ActivityRequirement(
@@ -102,6 +106,7 @@ class QuestGenerator @Inject constructor(
                 description = "Reach your full activity target before the day ends.",
                 difficulty = QuestDifficulty.C,
                 type = QuestType.SHORT,
+                date = dateString,
                 xpReward = 120,
                 attributeRewards = mapOf(AttributeType.DISCIPLINE to 0.4, AttributeType.ENDURANCE to 0.3),
                 requiredActivity = ActivityRequirement(
@@ -116,6 +121,7 @@ class QuestGenerator @Inject constructor(
                 description = "Record activity before 10:00 AM.",
                 difficulty = QuestDifficulty.E,
                 type = QuestType.SHORT,
+                date = dateString,
                 xpReward = 60,
                 attributeRewards = mapOf(AttributeType.AGILITY to 0.3, AttributeType.DISCIPLINE to 0.2),
                 requiredActivity = ActivityRequirement(
@@ -130,6 +136,7 @@ class QuestGenerator @Inject constructor(
                 description = "Complete your remaining activity target in the evening.",
                 difficulty = QuestDifficulty.C,
                 type = QuestType.SHORT,
+                date = dateString,
                 xpReward = 120,
                 attributeRewards = mapOf(AttributeType.DISCIPLINE to 0.4, AttributeType.STRENGTH to 0.3),
                 requiredActivity = ActivityRequirement(
@@ -150,6 +157,7 @@ class QuestGenerator @Inject constructor(
             description = "Complete your daily routine to stay in shape.",
             difficulty = QuestDifficulty.E,
             type = QuestType.DAILY,
+            date = dateString,
             isCompleted = false,
             xpReward = 100,
             attributeRewards = mapOf(
@@ -170,6 +178,7 @@ class QuestGenerator @Inject constructor(
             description = "Push your limits.",
             difficulty = QuestDifficulty.E,
             type = QuestType.DAILY,
+            date = dateString,
             isCompleted = false,
             xpReward = 150,
             attributeRewards = mapOf(
@@ -193,7 +202,8 @@ class QuestGenerator @Inject constructor(
             title = "Weekly Milestone: The Long Run",
             description = "Consistent effort yields great results.",
             difficulty = QuestDifficulty.C,
-            type = QuestType.WEEKLY,
+                type = QuestType.WEEKLY,
+                date = LocalDate.now().toString(),
             isCompleted = false,
             xpReward = 1000,
             attributeRewards = mapOf(

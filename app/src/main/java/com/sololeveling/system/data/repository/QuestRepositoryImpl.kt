@@ -46,6 +46,39 @@ class QuestRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getActiveQuestsForDate(date: String): Flow<List<Quest>> {
+        return questDao.getActiveQuestsForDate(date).map { entities ->
+            entities.map { entity ->
+                entity.toDomain(
+                    attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),
+                    requiredActivity = gson.fromJson(entity.requiredActivityJson, ActivityRequirement::class.java)
+                )
+            }
+        }
+    }
+
+    override fun getCompletedQuestsForDate(date: String): Flow<List<Quest>> {
+        return questDao.getCompletedQuestsForDate(date).map { entities ->
+            entities.map { entity ->
+                entity.toDomain(
+                    attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),
+                    requiredActivity = gson.fromJson(entity.requiredActivityJson, ActivityRequirement::class.java)
+                )
+            }
+        }
+    }
+
+    override fun getAllQuests(): Flow<List<Quest>> {
+        return questDao.getAllQuests().map { entities ->
+            entities.map { entity ->
+                entity.toDomain(
+                    attributeRewards = gson.fromJson(entity.attributeRewardsJson, object : com.google.gson.reflect.TypeToken<Map<AttributeType, Double>>() {}.type) ?: emptyMap(),
+                    requiredActivity = gson.fromJson(entity.requiredActivityJson, ActivityRequirement::class.java)
+                )
+            }
+        }
+    }
+
     override suspend fun updateQuest(quest: Quest) {
         questDao.updateQuest(toEntity(quest))
         authRepository.getCurrentUser()?.uid?.let { uid ->
