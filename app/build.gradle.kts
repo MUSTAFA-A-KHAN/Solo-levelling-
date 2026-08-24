@@ -112,6 +112,9 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
+    // Image loading / GIF support
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     // Health Connect
     implementation("androidx.health.connect:connect-client:1.0.0-alpha11")
 

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import coil.compose.AsyncImage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -441,45 +442,53 @@ fun DailyQuestOverview(quests: List<Quest>) {
 @Composable
 fun ShadowArmyPanel() {
     SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "SHADOW ARMY",
-                style = MaterialTheme.typography.labelLarge,
-                color = SystemNeonPurple,
-                letterSpacing = 2.sp
+        Box(modifier = Modifier.fillMaxWidth()) {
+            AsyncImage(
+                model = R.drawable.blue_flame,
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth().height(220.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "SHADOW ARMY",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = SystemNeonPurple,
+                    letterSpacing = 2.sp
+                )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                CharacterPortrait(
-                    modifier = Modifier.weight(1f),
-                    drawable = R.drawable.img_cha_hae_in,
-                    label = "CHA HAE-IN"
-                )
-                CharacterPortrait(
-                    modifier = Modifier.weight(1f),
-                    drawable = R.drawable.img_igris,
-                    label = "IGRIS"
-                )
-            }
+                Spacer(modifier = Modifier.height(16.dp))
 
-             Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                CharacterPortrait(
-                    modifier = Modifier.weight(1f),
-                    drawable = R.drawable.img_baro,
-                    label = "BARO"
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CharacterPortrait(
+                        modifier = Modifier.weight(1f),
+                        drawable = R.drawable.img_cha_hae_in,
+                        label = "CHA HAE-IN"
+                    )
+                    CharacterPortrait(
+                        modifier = Modifier.weight(1f),
+                        drawable = R.drawable.img_igris,
+                        label = "IGRIS"
+                    )
+                }
+
+                 Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CharacterPortrait(
+                        modifier = Modifier.weight(1f),
+                        drawable = R.drawable.img_baro,
+                        label = "BARO"
+                    )
+                }
             }
         }
-
     }
 }
 
