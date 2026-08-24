@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import coil.compose.AsyncImage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,19 +25,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
+
+import com.sololeveling.system.R
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
-import com.sololeveling.system.R
+import com.sololeveling.system.presentation.components.AnimatedFireEffect
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.HolographicProgressBar
 import com.sololeveling.system.presentation.components.RankEmblem
 import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.theme.*
+
+
+@Preview(
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 700
+)
+@Composable
+fun ShadowArmyPanelPreview() {
+    SystemTheme {
+        AtmosphericBackground(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ShadowArmyPanel()
+        }
+    }
+}
+
 
 @Composable
 fun CommandCenterScreen(
@@ -71,13 +91,16 @@ fun CommandCenterScreen(
         }
     }
 
-    AtmosphericBackground(modifier = Modifier.fillMaxSize()) {
+    AtmosphericBackground(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
@@ -104,7 +127,10 @@ fun CommandCenterScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             player?.let { p ->
-                PlayerSummaryPanel(p, onClick = onNavigateToProfile)
+                PlayerSummaryPanel(
+                    p,
+                    onClick = onNavigateToProfile
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -113,18 +139,23 @@ fun CommandCenterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+
                 SystemPanel(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onNavigateToQuests() }
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
                             text = "QUEST LOG",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
+
                         Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = "${activeQuests.size} ACTIVE",
                             style = MaterialTheme.typography.labelMedium,
@@ -139,13 +170,17 @@ fun CommandCenterScreen(
                         .clickable { onNavigateToLeaderboard() },
                     borderColor = SystemNeonPurple
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
                             text = "LEADERBOARD",
                             style = MaterialTheme.typography.titleMedium,
                             color = SystemNeonPurple
                         )
+
                         Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = "RANKINGS",
                             style = MaterialTheme.typography.labelMedium,
@@ -160,13 +195,17 @@ fun CommandCenterScreen(
                         .clickable { viewModel.syncHealthData() },
                     borderColor = MaterialTheme.colorScheme.secondary
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
                             text = "SYNC DATA",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )
+
                         Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = "HEALTH CONNECT",
                             style = MaterialTheme.typography.labelMedium,
@@ -193,31 +232,57 @@ fun CommandCenterScreen(
     }
 
     if (syncUiState is CommandCenterViewModel.PlayerSyncUiState.Conflict) {
-        val remote = (syncUiState as CommandCenterViewModel.PlayerSyncUiState.Conflict).remote
+
+        val remote =
+            (syncUiState as CommandCenterViewModel.PlayerSyncUiState.Conflict).remote
+
         AlertDialog(
-            onDismissRequest = { viewModel.dismissConflict() },
-            title = { Text("EXISTING PROGRESS FOUND", color = MaterialTheme.colorScheme.primary) },
+            onDismissRequest = {
+                viewModel.dismissConflict()
+            },
+            title = {
+                Text(
+                    "EXISTING PROGRESS FOUND",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
             text = {
                 Text(
-                    "Your Google account already has saved progress (Level ${remote.level}). " +
-                        "Restoring it will replace your local progress on this device. " +
-                        "Continue?",
+                    "Your Google account already has saved progress " +
+                            "(Level ${remote.level}). " +
+                            "Restoring it will replace your local progress on this device. " +
+                            "Continue?",
                     color = MaterialTheme.colorScheme.onSurface
                 )
             },
             confirmButton = {
-                TextButton(onClick = { viewModel.confirmRemoteOverride() }) {
-                    Text("RESTORE CLOUD", color = MaterialTheme.colorScheme.primary)
+                TextButton(
+                    onClick = {
+                        viewModel.confirmRemoteOverride()
+                    }
+                ) {
+                    Text(
+                        "RESTORE CLOUD",
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.dismissConflict() }) {
-                    Text("KEEP LOCAL", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                TextButton(
+                    onClick = {
+                        viewModel.dismissConflict()
+                    }
+                ) {
+                    Text(
+                        "KEEP LOCAL",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         )
     }
 }
+
 
 @Composable
 fun ConnectionStatusIndicator(
@@ -230,24 +295,28 @@ fun ConnectionStatusIndicator(
     val shouldShowError: Boolean
 
     when (status) {
+
         is CommandCenterViewModel.ConnectionStatus.Connected -> {
             dotColor = StatusSuccess
             dotPulse = false
             errorMessage = null
             shouldShowError = false
         }
+
         is CommandCenterViewModel.ConnectionStatus.Syncing -> {
             dotColor = StatusWarning
             dotPulse = true
             errorMessage = null
             shouldShowError = false
         }
+
         is CommandCenterViewModel.ConnectionStatus.Failed -> {
             dotColor = StatusError
             dotPulse = true
             errorMessage = status.message
             shouldShowError = true
         }
+
         is CommandCenterViewModel.ConnectionStatus.Idle -> {
             dotColor = MaterialTheme.colorScheme.onSurfaceVariant
             dotPulse = false
@@ -258,13 +327,16 @@ fun ConnectionStatusIndicator(
 
     val animatedDotColor by animateColorAsState(
         targetValue = dotColor,
-        animationSpec = tween(durationMillis = if (dotPulse) 600 else 300)
+        animationSpec = tween(
+            durationMillis = if (dotPulse) 600 else 300
+        )
     )
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(bottom = 4.dp)
     ) {
+
         Box(
             modifier = Modifier
                 .size(if (dotPulse) 12.dp else 10.dp)
@@ -273,15 +345,24 @@ fun ConnectionStatusIndicator(
         )
 
         if (shouldShowError && errorMessage != null) {
+
             Spacer(modifier = Modifier.width(8.dp))
+
             Text(
                 text = "SYNC ERROR: $errorMessage",
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
                 color = StatusError,
-                modifier = Modifier.clickable { onDismissError() }
+                modifier = Modifier.clickable {
+                    onDismissError()
+                }
             )
+
         } else {
+
             Spacer(modifier = Modifier.width(8.dp))
+
             Text(
                 text = "CLOUD CONNECTED",
                 style = MaterialTheme.typography.labelMedium,
@@ -291,18 +372,33 @@ fun ConnectionStatusIndicator(
     }
 }
 
+
 @Composable
-fun PlayerSummaryPanel(player: Player, onClick: () -> Unit = {}) {
-    SystemPanel(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+fun PlayerSummaryPanel(
+    player: Player,
+    onClick: () -> Unit = {}
+) {
+    SystemPanel(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            RankEmblem(rank = player.rank, size = 72.dp)
+
+            RankEmblem(
+                rank = player.rank,
+                size = 72.dp
+            )
 
             Spacer(modifier = Modifier.width(20.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
                 Text(
                     text = player.name,
                     style = MaterialTheme.typography.titleLarge,
@@ -324,11 +420,15 @@ fun PlayerSummaryPanel(player: Player, onClick: () -> Unit = {}) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
+
                     Text(
                         text = "LEVEL ${player.level}",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
                         color = MaterialTheme.colorScheme.primary
                     )
+
                     Text(
                         text = "${player.xp} / ${player.nextLevelXp} XP",
                         style = MaterialTheme.typography.labelMedium,
@@ -338,62 +438,125 @@ fun PlayerSummaryPanel(player: Player, onClick: () -> Unit = {}) {
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                val progress = if (player.nextLevelXp > 0) (player.xp.toFloat() / player.nextLevelXp.toFloat()) else 0f
-                HolographicProgressBar(progress = progress)
+                val progress =
+                    if (player.nextLevelXp > 0) {
+                        player.xp.toFloat() / player.nextLevelXp.toFloat()
+                    } else {
+                        0f
+                    }
+
+                HolographicProgressBar(
+                    progress = progress
+                )
             }
         }
     }
 }
 
+
 @Composable
-fun HealthOverviewPanel(data: DailyHealthData) {
-    SystemPanel(modifier = Modifier.fillMaxWidth()) {
+fun HealthOverviewPanel(
+    data: DailyHealthData
+) {
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column {
+
             Text(
                 text = "TODAY's OVERVIEW",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                HealthStatMetric(label = "STEPS", value = data.steps.toString(), color = SystemNeonBlue)
-                HealthStatMetric(label = "ACTIVE", value = "${data.workoutMinutes}m", color = StatusSuccess)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                HealthStatMetric(
+                    label = "STEPS",
+                    value = data.steps.toString(),
+                    color = SystemNeonBlue
+                )
+
+                HealthStatMetric(
+                    label = "ACTIVE",
+                    value = "${data.workoutMinutes}m",
+                    color = StatusSuccess
+                )
             }
+
             Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                HealthStatMetric(label = "CALORIES", value = "${data.caloriesBurned.toInt()} kcal", color = StatusWarning)
-                HealthStatMetric(label = "SLEEP", value = "${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m", color = SystemNeonPurple)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                HealthStatMetric(
+                    label = "CALORIES",
+                    value = "${data.caloriesBurned.toInt()} kcal",
+                    color = StatusWarning
+                )
+
+                HealthStatMetric(
+                    label = "SLEEP",
+                    value = "${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m",
+                    color = SystemNeonPurple
+                )
             }
         }
     }
 }
 
+
 @Composable
-fun HealthStatMetric(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
+fun HealthStatMetric(
+    label: String,
+    value: String,
+    color: androidx.compose.ui.graphics.Color
+) {
     Column {
+
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
         Text(
             text = value,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold
+            ),
             color = color
         )
     }
 }
 
+
 @Composable
-fun DailyQuestOverview(quests: List<Quest>) {
-    val dailyQuests = quests.filter { it.type == com.sololeveling.system.domain.model.QuestType.DAILY }
+fun DailyQuestOverview(
+    quests: List<Quest>
+) {
+    val dailyQuests =
+        quests.filter {
+            it.type == com.sololeveling.system.domain.model.QuestType.DAILY
+        }
 
     SystemPanel(
         modifier = Modifier.fillMaxWidth(),
-        borderColor = if (dailyQuests.isEmpty()) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondary
+        borderColor =
+            if (dailyQuests.isEmpty()) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.secondary
+            }
     ) {
+
         Column {
+
             Text(
                 text = "DAILY QUESTS",
                 style = MaterialTheme.typography.labelLarge,
@@ -403,13 +566,17 @@ fun DailyQuestOverview(quests: List<Quest>) {
             Spacer(modifier = Modifier.height(12.dp))
 
             if (dailyQuests.isEmpty()) {
+
                 Text(
                     text = "No active daily quests. Wait for system reset.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
             } else {
+
                 dailyQuests.forEach { quest ->
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -417,6 +584,7 @@ fun DailyQuestOverview(quests: List<Quest>) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+
                         Text(
                             text = quest.title,
                             style = MaterialTheme.typography.bodyMedium,
@@ -425,11 +593,28 @@ fun DailyQuestOverview(quests: List<Quest>) {
                         )
 
                         quest.requiredActivity?.let { req ->
-                            val progress = if (req.targetValue > 0) (req.currentValue / req.targetValue).toFloat().coerceIn(0f, 1f) else 0f
-                            Box(modifier = Modifier.width(100.dp)) {
+
+                            val progress =
+                                if (req.targetValue > 0) {
+                                    (
+                                            req.currentValue /
+                                                    req.targetValue
+                                            ).toFloat().coerceIn(0f, 1f)
+                                } else {
+                                    0f
+                                }
+
+                            Box(
+                                modifier = Modifier.width(100.dp)
+                            ) {
                                 HolographicProgressBar(
                                     progress = progress,
-                                    color = if (progress >= 1f) StatusSuccess else MaterialTheme.colorScheme.secondary
+                                    color =
+                                        if (progress >= 1f) {
+                                            StatusSuccess
+                                        } else {
+                                            MaterialTheme.colorScheme.secondary
+                                        }
                                 )
                             }
                         }
@@ -440,58 +625,63 @@ fun DailyQuestOverview(quests: List<Quest>) {
     }
 }
 
+
 @Composable
 fun ShadowArmyPanel() {
-    SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            AsyncImage(
-                model = R.drawable.blue_flame,
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(220.dp),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        borderColor = SystemNeonPurple
+    ) {
+
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            Text(
+                text = "SHADOW ARMY",
+                style = MaterialTheme.typography.labelLarge,
+                color = SystemNeonPurple,
+                letterSpacing = 2.sp
             )
 
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "SHADOW ARMY",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = SystemNeonPurple,
-                    letterSpacing = 2.sp
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+
+                CharacterPortrait(
+                    modifier = Modifier.weight(1f),
+                    drawable = R.drawable.img_cha_hae_in,
+                    label = "CHA HAE-IN"
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                CharacterPortrait(
+                    modifier = Modifier.weight(1f),
+                    drawable = R.drawable.img_igris,
+                    label = "IGRIS"
+                )
+            }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CharacterPortrait(
-                        modifier = Modifier.weight(1f),
-                        drawable = R.drawable.img_cha_hae_in,
-                        label = "CHA HAE-IN"
-                    )
-                    CharacterPortrait(
-                        modifier = Modifier.weight(1f),
-                        drawable = R.drawable.img_igris,
-                        label = "IGRIS"
-                    )
-                }
+            Spacer(modifier = Modifier.height(16.dp))
 
-                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CharacterPortrait(
-                        modifier = Modifier.weight(1f),
-                        drawable = R.drawable.img_baro,
-                        label = "BARO"
-                    )
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+
+                CharacterPortrait(
+                    modifier = Modifier.weight(1f),
+                    drawable = R.drawable.img_baro,
+                    label = "BARO"
+                )
             }
         }
     }
 }
+
 
 @Composable
 fun CharacterPortrait(
@@ -499,20 +689,32 @@ fun CharacterPortrait(
     drawable: Int,
     label: String
 ) {
+
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
-
     ) {
-        Image(
-            painter = painterResource(id = drawable),
-            contentDescription = label,
-            contentScale = ContentScale.Crop,
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp)
                 .clip(RoundedCornerShape(12.dp))
-        )
+        ) {
+
+            // Character
+            Image(
+                painter = painterResource(id = drawable),
+                contentDescription = label,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Dummy animated online GIF
+            AnimatedFireEffect(
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
