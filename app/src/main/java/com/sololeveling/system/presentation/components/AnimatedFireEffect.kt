@@ -24,7 +24,7 @@ fun AnimatedFireEffect(
 
     AsyncImage(
         model = ImageRequest.Builder(context)
-            .data("https://media1.giphy.com/media/cZ7rmKfFYOvYI/200.gif")
+            .data("https://videos-preview-r41.rawpixel.com/video/2025/03/06/01jnmw6rf1cysgxg37dd5aky9j/transparent_gif.gif?v=1&dl=attachment%3B+filename%3D%22video-from-rawpixel-id-17167191-gif.gif%22")
             .crossfade(false)
             .build(),
         imageLoader = imageLoader,

@@ -701,7 +701,10 @@ fun CharacterPortrait(
                 .height(220.dp)
                 .clip(RoundedCornerShape(12.dp))
         ) {
-
+            // Dummy animated online GIF
+            AnimatedFireEffect(
+                modifier = Modifier.fillMaxSize()
+            )
             // Character
             Image(
                 painter = painterResource(id = drawable),
@@ -710,10 +713,7 @@ fun CharacterPortrait(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Dummy animated online GIF
-            AnimatedFireEffect(
-                modifier = Modifier.fillMaxSize()
-            )
+            
         }
 
         Spacer(modifier = Modifier.height(8.dp))
