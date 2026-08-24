@@ -13,6 +13,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.sololeveling.system.presentation.theme.SystemNeonBlue
 
@@ -29,7 +32,13 @@ fun HolographicProgressBar(
         label = "progress"
     )
 
-    Canvas(modifier = modifier.fillMaxWidth().height(12.dp)) {
+    Canvas(modifier = modifier
+        .fillMaxWidth()
+        .height(12.dp)
+        .semantics {
+            progressBarRangeInfo = ProgressBarRangeInfo(current = progress.coerceIn(0f, 1f), range = 0f..1f)
+        }
+    ) {
         val width = size.width
         val height = size.height
         val cornerRadius = CornerRadius(height / 2, height / 2)
