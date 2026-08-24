@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.collectLatest
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.R
+import com.sololeveling.system.presentation.components.AnimatedFireEffect
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.HolographicProgressBar
 import com.sololeveling.system.presentation.components.RankEmblem
@@ -493,14 +495,25 @@ fun CharacterPortrait(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = painterResource(id = drawable),
-            contentDescription = label,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .clip(RoundedCornerShape(12.dp))
-        )
+
+        Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(220.dp)
+        .clip(RoundedCornerShape(12.dp))
+) {
+
+    AnimatedFireEffect(
+        modifier = Modifier.fillMaxSize()
+    )
+
+    Image(
+        painter = painterResource(id = drawable),
+        contentDescription = label,
+        contentScale = ContentScale.Fit,
+        modifier = Modifier.fillMaxSize()
+    )
+}
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
