@@ -36,6 +36,7 @@ class LeaderboardRepositoryImpl @Inject constructor(
             nextLevelXp = player.nextLevelXp,
             totalAttributes = totalAttributes,
             completedQuests = completedQuests,
+            footsteps = player.footsteps,
             score = score,
             lastUpdated = System.currentTimeMillis()
         )

@@ -10,6 +10,7 @@ data class LeaderboardEntry(
     val nextLevelXp: Long = 100,
     val totalAttributes: Double = 60.0,
     val completedQuests: Int = 0,
+    val footsteps: Long = 0L,
     val score: Long = 0L,
     val lastUpdated: Long = 0L
 )
