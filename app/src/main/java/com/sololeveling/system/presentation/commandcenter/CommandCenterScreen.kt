@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
@@ -40,6 +42,21 @@ import com.sololeveling.system.presentation.components.RankEmblem
 import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.theme.*
 
+@Preview(
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 700
+)
+@Composable
+fun ShadowArmyPanelPreview() {
+    SystemTheme {
+        AtmosphericBackground(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ShadowArmyPanel()
+        }
+    }
+}
 @Composable
 fun CommandCenterScreen(
     viewModel: CommandCenterViewModel = hiltViewModel(),
@@ -465,7 +482,8 @@ fun ShadowArmyPanel() {
                 CharacterPortrait(
                     modifier = Modifier.weight(1f),
                     drawable = R.drawable.img_igris,
-                    label = "IGRIS"
+                    label = "IGRIS",
+                    imageOffsetX = (-19).dp
                 )
             }
 
@@ -489,32 +507,35 @@ fun ShadowArmyPanel() {
 fun CharacterPortrait(
     modifier: Modifier = Modifier,
     drawable: Int,
-    label: String
+    label: String,
+    imageOffsetX: Dp = 0.dp
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Box(
-    modifier = Modifier
-        .fillMaxWidth()
-        .height(220.dp)
-        .clip(RoundedCornerShape(12.dp))
-) {
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .clip(RoundedCornerShape(12.dp))
+        ) {
+            AnimatedFireEffect(
+                modifier = Modifier.fillMaxSize()
+            )
 
-    AnimatedFireEffect(
-        modifier = Modifier.fillMaxSize()
-    )
+            Image(
+                painter = painterResource(id = drawable),
+                contentDescription = label,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = imageOffsetX)
+            )
+        }
 
-    Image(
-        painter = painterResource(id = drawable),
-        contentDescription = label,
-        contentScale = ContentScale.Fit,
-        modifier = Modifier.fillMaxSize()
-    )
-}
         Spacer(modifier = Modifier.height(8.dp))
+
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
