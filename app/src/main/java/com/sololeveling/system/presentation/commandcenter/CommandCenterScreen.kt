@@ -36,25 +36,41 @@ import kotlinx.coroutines.flow.collectLatest
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.R
+import com.sololeveling.system.domain.model.Rank
 import com.sololeveling.system.presentation.components.AnimatedFireEffect
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.HolographicProgressBar
 import com.sololeveling.system.presentation.components.RankEmblem
 import com.sololeveling.system.presentation.components.SystemPanel
+import com.sololeveling.system.presentation.components.PlayerStatusCard
 import com.sololeveling.system.presentation.theme.*
 
 @Preview(
     showBackground = true,
+    backgroundColor = 0xFF05070D,
     widthDp = 390,
-    heightDp = 700
+    heightDp = 220
 )
 @Composable
-fun QuotesPanelPreview() {
+fun PlayerStatusCardPreview() {
     SystemTheme {
-        AtmosphericBackground(
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF05070D))
+                .padding(16.dp),
+            contentAlignment = Alignment.TopCenter
         ) {
-            QuotesPanel()
+            PlayerStatusCard(
+                player = Player(
+                    name = "Sung Jin-Woo",
+                    title = "The Shadow Monarch",
+                    rank = Rank.S,
+                    level = 87,
+                    xp = 7420,
+                    nextLevelXp = 10000
+                )
+            )
         }
     }
 }
@@ -121,8 +137,10 @@ fun CommandCenterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            player?.let { p ->
-                PlayerSummaryPanel(p, onClick = onNavigateToProfile)
+             player?.let { p ->
+
+                PlayerStatusCard(p, onClick = onNavigateToProfile)
+
             }
 
             Spacer(modifier = Modifier.height(16.dp))
