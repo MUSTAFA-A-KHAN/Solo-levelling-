@@ -347,6 +347,21 @@ fun LeaderboardItem(
                 )
             }
 
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "STEPS",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = entry.footsteps.toString(),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = SystemNeonPurpleVariant
+                )
+            }
+
             if (!entry.photoUrl.isNullOrEmpty()) {
                 Box(
                     modifier = Modifier

@@ -20,10 +20,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
@@ -32,12 +36,28 @@ import kotlinx.coroutines.flow.collectLatest
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.R
+import com.sololeveling.system.presentation.components.AnimatedFireEffect
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.HolographicProgressBar
 import com.sololeveling.system.presentation.components.RankEmblem
 import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.theme.*
 
+@Preview(
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 700
+)
+@Composable
+fun QuotesPanelPreview() {
+    SystemTheme {
+        AtmosphericBackground(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            QuotesPanel()
+        }
+    }
+}
 @Composable
 fun CommandCenterScreen(
     viewModel: CommandCenterViewModel = hiltViewModel(),
@@ -185,6 +205,10 @@ fun CommandCenterScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             ShadowArmyPanel()
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            QuotesPanel()
 
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -439,6 +463,25 @@ fun DailyQuestOverview(quests: List<Quest>) {
 }
 
 @Composable
+fun QuotesPanel(){
+     SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Quotes",
+                style = MaterialTheme.typography.labelLarge,
+                color = SystemNeonPurple,
+                letterSpacing = 2.sp
+            )
+            QuoteImage(
+                modifier = Modifier,
+                drawable = R.drawable.img_elixir_glow,
+                label = "“The system will not give you what you want. It will give you what you earn.”"
+            )
+        }
+    }
+}
+
+@Composable
 fun ShadowArmyPanel() {
     SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -463,7 +506,8 @@ fun ShadowArmyPanel() {
                 CharacterPortrait(
                     modifier = Modifier.weight(1f),
                     drawable = R.drawable.img_igris,
-                    label = "IGRIS"
+                    label = "IGRIS",
+                    imageOffsetX = (-19).dp
                 )
             }
 
@@ -487,25 +531,80 @@ fun ShadowArmyPanel() {
 fun CharacterPortrait(
     modifier: Modifier = Modifier,
     drawable: Int,
-    label: String
+    label: String,
+    imageOffsetX: Dp = 0.dp
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = painterResource(id = drawable),
-            contentDescription = label,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp)
                 .clip(RoundedCornerShape(12.dp))
-        )
+        ) {
+            AnimatedFireEffect(
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Image(
+                painter = painterResource(id = drawable),
+                contentDescription = label,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = imageOffsetX)
+            )
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
+
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun QuoteImage(
+    modifier: Modifier = Modifier,
+    drawable: Int,
+    label: String,
+    imageOffsetX: Dp = 0.dp
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(220.dp)
+            .clip(RoundedCornerShape(12.dp))
+    ) {
+        AnimatedFireEffect(
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Image(
+            painter = painterResource(id = drawable),
+            contentDescription = label,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(x = imageOffsetX)
+                .alpha(0.5f)
+        )
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp
+            ),
+            color = Color.White,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 10.dp)
         )
     }
 }

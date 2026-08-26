@@ -22,6 +22,7 @@ data class PlayerEntity(
     val discipline: Double,
     val endurance: Double,
     val availableAttributePoints: Int,
+    val footsteps: Long,
     val lastSyncTime: Long
 )
 
@@ -43,6 +44,7 @@ fun PlayerEntity.toDomain(): Player {
             endurance = endurance
         ),
         availableAttributePoints = availableAttributePoints,
+        footsteps = footsteps,
         lastSyncTime = lastSyncTime
     )
 }
@@ -63,6 +65,7 @@ fun Player.toEntity(): PlayerEntity {
         discipline = attributes.discipline,
         endurance = attributes.endurance,
         availableAttributePoints = availableAttributePoints,
+        footsteps = footsteps,
         lastSyncTime = lastSyncTime
     )
 }

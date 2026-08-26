@@ -13,6 +13,7 @@ data class LeaderboardDocument(
     val nextLevelXp: Long = 100,
     val totalAttributes: Double = 0.0,
     val completedQuests: Int = 0,
+    val footsteps: Long = 0L,
     val score: Long = 0L,
     val lastUpdated: Long = 0L
 )
@@ -27,6 +28,7 @@ fun LeaderboardDocument.toDomain(): LeaderboardEntry = LeaderboardEntry(
     nextLevelXp = nextLevelXp,
     totalAttributes = totalAttributes,
     completedQuests = completedQuests,
+    footsteps = footsteps,
     score = score,
     lastUpdated = lastUpdated
 )
@@ -41,6 +43,7 @@ fun LeaderboardEntry.toDocument(): LeaderboardDocument = LeaderboardDocument(
     nextLevelXp = nextLevelXp,
     totalAttributes = totalAttributes,
     completedQuests = completedQuests,
+    footsteps = footsteps,
     score = score,
     lastUpdated = lastUpdated
 )

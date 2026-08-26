@@ -75,6 +75,7 @@ class ProgressionEngine {
         val playerWithXp = addXp(player, totalXpGained)
         val finalPlayer = playerWithXp.copy(
             attributes = newAttributes,
+            footsteps = player.footsteps + steps,
             lastSyncTime = syncTime
         )
 

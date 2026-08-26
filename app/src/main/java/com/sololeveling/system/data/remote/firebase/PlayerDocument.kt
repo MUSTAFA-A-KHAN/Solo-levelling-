@@ -19,6 +19,7 @@ data class PlayerDocument(
     val discipline: Double = 10.0,
     val endurance: Double = 10.0,
     val availableAttributePoints: Int = 0,
+    val footsteps: Long = 0L,
     val lastSyncTime: Long = 0L
 )
 
@@ -40,6 +41,7 @@ fun PlayerDocument.toDomain(): Player {
             endurance = endurance
         ),
         availableAttributePoints = availableAttributePoints,
+        footsteps = footsteps,
         lastSyncTime = lastSyncTime
     )
 }
@@ -60,6 +62,7 @@ fun Player.toDocument(): PlayerDocument {
         discipline = attributes.discipline,
         endurance = attributes.endurance,
         availableAttributePoints = availableAttributePoints,
+        footsteps = footsteps,
         lastSyncTime = lastSyncTime
     )
 }

@@ -40,12 +40,18 @@ object AppModule {
             context,
             SystemDatabase::class.java,
             "system_db"
-        ).addMigrations(MIGRATION_2_3).fallbackToDestructiveMigration().build()
+        ).addMigrations(MIGRATION_2_3, MIGRATION_3_4).fallbackToDestructiveMigration().build()
     }
 
     private val MIGRATION_2_3 = object : Migration(2, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE quest_table ADD COLUMN date TEXT NOT NULL DEFAULT ''")
+        }
+    }
+
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE player_table ADD COLUMN footsteps INTEGER NOT NULL DEFAULT 0")
         }
     }
 
