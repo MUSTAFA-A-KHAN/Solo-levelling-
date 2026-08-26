@@ -49,18 +49,36 @@ import com.sololeveling.system.presentation.theme.*
     showBackground = true,
     backgroundColor = 0xFF05070D,
     widthDp = 390,
-    heightDp = 220
+    heightDp = 1600
 )
 @Composable
-fun PlayerStatusCardPreview() {
+fun CommandCenterScreenPreview() {
     SystemTheme {
-        Box(
+
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF05070D))
-                .padding(16.dp),
-            contentAlignment = Alignment.TopCenter
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
         ) {
+
+            Spacer(Modifier.height(32.dp))
+
+            Text(
+                "SYSTEM ONLINE",
+                style = MaterialTheme.typography.displayMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Text(
+                "COMMAND CENTER",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 4.sp
+            )
+
+            Spacer(Modifier.height(24.dp))
+
             PlayerStatusCard(
                 player = Player(
                     name = "Sung Jin-Woo",
@@ -71,6 +89,29 @@ fun PlayerStatusCardPreview() {
                     nextLevelXp = 10000
                 )
             )
+
+            Spacer(Modifier.height(24.dp))
+
+            HealthOverviewPanel(
+                DailyHealthData(
+                    steps = 8421,
+                    workoutMinutes = 47,
+                    caloriesBurned = 426.00,
+                    sleepMinutes = 452
+                ),
+                weeklySteps = 52340,
+                totalSteps = 184230
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            ShadowArmyPanel()
+
+            Spacer(Modifier.height(24.dp))
+
+            QuotesPanel()
+
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
@@ -84,6 +125,7 @@ fun CommandCenterScreen(
     val player by viewModel.playerState.collectAsState()
     val activeQuests by viewModel.activeQuests.collectAsState()
     val dailyHealthData by viewModel.dailyHealthData.collectAsState()
+    val weeklySteps by viewModel.weeklySteps.collectAsState()
     val syncUiState by viewModel.syncUiState.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
 
@@ -214,7 +256,7 @@ fun CommandCenterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            HealthOverviewPanel(dailyHealthData)
+            HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -386,7 +428,7 @@ fun PlayerSummaryPanel(player: Player, onClick: () -> Unit = {}) {
 }
 
 @Composable
-fun HealthOverviewPanel(data: DailyHealthData) {
+fun HealthOverviewPanel(data: DailyHealthData, weeklySteps: Long = 0L, totalSteps: Long = 0L) {
     SystemPanel(modifier = Modifier.fillMaxWidth()) {
         Column {
             Text(
@@ -404,6 +446,11 @@ fun HealthOverviewPanel(data: DailyHealthData) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 HealthStatMetric(label = "CALORIES", value = "${data.caloriesBurned.toInt()} kcal", color = StatusWarning)
                 HealthStatMetric(label = "SLEEP", value = "${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m", color = SystemNeonPurple)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                HealthStatMetric(label = "WEEKLY STEPS", value = weeklySteps.toString(), color = StatusSuccess)
+                HealthStatMetric(label = "TOTAL STEPS", value = totalSteps.toString(), color = SystemNeonBlue)
             }
         }
     }

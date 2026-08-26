@@ -2,8 +2,71 @@ package progression
 
 import (
 	"math"
+	"sync"
+	"time"
+
 	"sololeveling/core-go/models"
 )
+
+// dailySteps records footsteps keyed by calendar date (UTC "2006-01-02").
+// It is an in-memory store used to derive weekly step counts.
+var (
+	dailyStepsMu sync.Mutex
+	dailySteps   = make(map[string]int64)
+)
+
+// dateKey returns the UTC calendar date key for a unix timestamp.
+func dateKey(unix int64) string {
+	return time.Unix(unix, 0).UTC().Format("2006-01-02")
+}
+
+// RecordDailySteps adds steps to the given UTC date key (format "2006-01-02").
+// It is safe for concurrent use.
+func RecordDailySteps(date string, steps int64) {
+	if steps <= 0 {
+		return
+	}
+	dailyStepsMu.Lock()
+	dailySteps[date] += steps
+	dailyStepsMu.Unlock()
+}
+
+// GetDailySteps returns the recorded steps for a given UTC date key.
+func GetDailySteps(date string) int64 {
+	dailyStepsMu.Lock()
+	defer dailyStepsMu.Unlock()
+	return dailySteps[date]
+}
+
+// WeeklySteps returns the total footsteps for the ISO week (Mon–Sun) that
+// contains refDate. refDate must be a UTC date key ("2006-01-02").
+func WeeklySteps(refDate string) int64 {
+	t, err := time.Parse("2006-01-02", refDate)
+	if err != nil {
+		return 0
+	}
+	// Find Monday of the week (Go: Monday = 1).
+	offset := int(t.Weekday()-time.Monday)
+	if offset < 0 {
+		offset += 7
+	}
+	start := t.AddDate(0, 0, -offset)
+
+	var total int64
+	dailyStepsMu.Lock()
+	for i := 0; i < 7; i++ {
+		d := start.AddDate(0, 0, i).Format("2006-01-02")
+		total += dailySteps[d]
+	}
+	dailyStepsMu.Unlock()
+	return total
+}
+
+// WeeklyStepsFromTime returns the weekly footsteps for the ISO week containing
+// the given unix timestamp.
+func WeeklyStepsFromTime(unix int64) int64 {
+	return WeeklySteps(dateKey(unix))
+}
 
 // CalculateNextLevelXp calculates XP needed for the next level.
 func CalculateNextLevelXp(level int32) int64 {
@@ -58,6 +121,11 @@ func ProcessHealthData(state *models.PlayerState, steps int64, workoutMinutes in
 	if steps <= 0 && workoutMinutes <= 0 {
 		state.LastSyncTime = syncTime
 		return
+	}
+
+	// Attribute steps to their calendar date so weekly totals can be derived.
+	if steps > 0 {
+		RecordDailySteps(dateKey(syncTime), steps)
 	}
 
 	xpFromSteps := steps / 100

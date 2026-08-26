@@ -50,6 +50,14 @@ class ProgressionEngine {
         )
     }
 
+    /**
+     * Returns the footsteps counted for the ISO week (Mon–Sun) containing [now],
+     * computed by the Go core from its per-day step store.
+     */
+    fun getWeeklySteps(now: Long = System.currentTimeMillis()): Long {
+        return Api.weeklyStepsFromTime(now)
+    }
+
     fun evaluateRank(player: Player): Rank {
         val result = Api.evaluateRank(
             player.level,
