@@ -168,6 +168,18 @@ class CommandCenterViewModel @Inject constructor(
                 sleepMinutes = snapshot.sleepMinutes
             )
 
+            // Seed the Go core's per-day store with real step totals for the last
+            // 7 days so the weekly aggregate reflects actual data, not just the
+            // current session.
+            val today = LocalDate.now()
+            for (i in 6 downTo 0) {
+                val day = today.minusDays(i.toLong())
+                val dayStart = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val dayEnd = day.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val daySteps = healthConnectManager.getStepsInRange(dayStart, dayEnd)
+                progressionEngine.setDailySteps(day.toString(), daySteps)
+            }
+
             // Weekly steps are aggregated by the Go core from its per-day store.
             _weeklySteps.value = progressionEngine.getWeeklySteps()
 
@@ -244,7 +256,7 @@ class CommandCenterViewModel @Inject constructor(
                 playerRepository.updatePlayer(updatedPlayer)
 
                 // Weekly steps are aggregated by the Go core from its per-day store.
-                _weeklySteps.value = progressionEngine.getWeeklySteps(now)
+                _weeklySteps.value = progressionEngine.getWeeklySteps()
 
                 questSyncUseCase.syncQuestsWithHealthData(buildDailyHealthSnapshot(startOfDay))
 

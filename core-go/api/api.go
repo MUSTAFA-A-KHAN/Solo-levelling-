@@ -124,6 +124,11 @@ func RecordDailySteps(date string, steps int64) {
 	progression.RecordDailySteps(date, steps)
 }
 
+// SetDailySteps overwrites the recorded daily total for a UTC date key.
+func SetDailySteps(date string, steps int64) {
+	progression.SetDailySteps(date, steps)
+}
+
 // GetDailySteps exposes the recorded steps for a single UTC date key.
 func GetDailySteps(date string) int64 {
 	return progression.GetDailySteps(date)

@@ -31,6 +31,20 @@ func RecordDailySteps(date string, steps int64) {
 	dailyStepsMu.Unlock()
 }
 
+// SetDailySteps overwrites the steps recorded for the given UTC date key
+// (format "2006-01-02") with the absolute daily total. It is safe for
+// concurrent use and is idempotent, so it will not double-count when called
+// repeatedly with the same day's total.
+func SetDailySteps(date string, steps int64) {
+	dailyStepsMu.Lock()
+	if steps <= 0 {
+		dailySteps[date] = 0
+	} else {
+		dailySteps[date] = steps
+	}
+	dailyStepsMu.Unlock()
+}
+
 // GetDailySteps returns the recorded steps for a given UTC date key.
 func GetDailySteps(date string) int64 {
 	dailyStepsMu.Lock()
@@ -121,11 +135,6 @@ func ProcessHealthData(state *models.PlayerState, steps int64, workoutMinutes in
 	if steps <= 0 && workoutMinutes <= 0 {
 		state.LastSyncTime = syncTime
 		return
-	}
-
-	// Attribute steps to their calendar date so weekly totals can be derived.
-	if steps > 0 {
-		RecordDailySteps(dateKey(syncTime), steps)
 	}
 
 	xpFromSteps := steps / 100
