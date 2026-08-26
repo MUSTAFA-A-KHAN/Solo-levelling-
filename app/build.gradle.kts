@@ -135,4 +135,36 @@ dependencies {
     implementation("io.coil-kt:coil:2.6.0") 
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.coil-kt:coil-gif:2.6.0")
+
+    // Core Go AAR
+    implementation(files("libs/corego.aar"))
+}
+
+tasks.register<Exec>("buildGoCore") {
+    workingDir = file("../core-go")
+
+    val gopath = System.getenv("GOPATH") ?: "${System.getProperty("user.home")}/go"
+    environment("PATH", "${System.getenv("PATH")}:$gopath/bin")
+
+    // Using environment variables or defaults that work for GitHub Actions & local
+    val androidHome = System.getenv("ANDROID_HOME") ?: "${System.getProperty("user.home")}/Android/Sdk"
+    environment("ANDROID_HOME", androidHome)
+
+    // Check if ANDROID_NDK_HOME is set, otherwise rely on gomobile's discovery
+    val ndkHome = System.getenv("ANDROID_NDK_HOME")
+    if (ndkHome != null) {
+        environment("ANDROID_NDK_HOME", ndkHome)
+    }
+
+    commandLine(
+        "gomobile", "bind",
+        "-target=android",
+        "-androidapi=26",
+        "-o", "../app/libs/corego.aar",
+        "./api"
+    )
+}
+
+tasks.named("preBuild") {
+    dependsOn("buildGoCore")
 }
