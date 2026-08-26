@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
+import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,7 +78,7 @@ fun QuestScreen(
                             .weight(1f)
                             .clip(RoundedCornerShape(4.dp))
                             .background(if (!showCompleted) SystemNeonBlue.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0f))
-                            .clickable { showCompleted = false }
+                            .clickable(onClickLabel = "Show Active Quests", role = Role.Tab) { showCompleted = false }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -92,7 +93,7 @@ fun QuestScreen(
                             .weight(1f)
                             .clip(RoundedCornerShape(4.dp))
                             .background(if (showCompleted) SystemNeonPurple.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0f))
-                            .clickable { showCompleted = true }
+                            .clickable(onClickLabel = "Show Completed Quests", role = Role.Tab) { showCompleted = true }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
