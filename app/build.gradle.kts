@@ -156,6 +156,11 @@ tasks.register<Exec>("buildGoCore") {
         environment("ANDROID_NDK_HOME", ndkHome)
     }
 
+    // Ensure the output directory exists
+    doFirst {
+        file("../app/libs").mkdirs()
+    }
+
     commandLine(
         "gomobile", "bind",
         "-target=android",
