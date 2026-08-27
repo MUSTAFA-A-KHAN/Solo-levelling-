@@ -50,6 +50,23 @@ class ProgressionEngine {
         )
     }
 
+    /**
+     * Stores the absolute step total for a single calendar day in the Go core's
+     * per-day store. Idempotent — call it whenever fresh daily data is available.
+     */
+    fun setDailySteps(date: String, steps: Long) {
+        Api.setDailySteps(date, steps)
+    }
+
+    /**
+     * Returns the footsteps counted for the ISO week (Mon–Sun) containing today,
+     * computed by the Go core from its per-day step store.
+     */
+    fun getWeeklySteps(): Long {
+        val today = java.time.LocalDate.now().toString() // "YYYY-MM-DD"
+        return Api.weeklySteps(today)
+    }
+
     fun evaluateRank(player: Player): Rank {
         val result = Api.evaluateRank(
             player.level,

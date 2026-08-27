@@ -119,6 +119,33 @@ func AddXp(
 	return mapStateToResult(state)
 }
 
+// RecordDailySteps exposes per-day step recording for weekly aggregation.
+func RecordDailySteps(date string, steps int64) {
+	progression.RecordDailySteps(date, steps)
+}
+
+// SetDailySteps overwrites the recorded daily total for a UTC date key.
+func SetDailySteps(date string, steps int64) {
+	progression.SetDailySteps(date, steps)
+}
+
+// GetDailySteps exposes the recorded steps for a single UTC date key.
+func GetDailySteps(date string) int64 {
+	return progression.GetDailySteps(date)
+}
+
+// WeeklySteps exposes the ISO-week (Mon–Sun) footsteps total for the given
+// UTC date key ("2006-01-02").
+func WeeklySteps(refDate string) int64 {
+	return progression.WeeklySteps(refDate)
+}
+
+// WeeklyStepsFromTime exposes the ISO-week footsteps total for the week
+// containing the given unix timestamp.
+func WeeklyStepsFromTime(syncTime int64) int64 {
+	return progression.WeeklyStepsFromTime(syncTime)
+}
+
 // EvaluateRank exposes rank evaluation.
 func EvaluateRank(
 	level int32, xp int64, nextLevelXp int64, availablePoints int32,

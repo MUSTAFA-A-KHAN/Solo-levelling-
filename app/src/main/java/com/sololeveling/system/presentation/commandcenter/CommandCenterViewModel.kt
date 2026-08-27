@@ -58,6 +58,9 @@ class CommandCenterViewModel @Inject constructor(
     private val _dailyHealthData = MutableStateFlow(DailyHealthData())
     val dailyHealthData: StateFlow<DailyHealthData> = _dailyHealthData.asStateFlow()
 
+    private val _weeklySteps = MutableStateFlow(0L)
+    val weeklySteps: StateFlow<Long> = _weeklySteps.asStateFlow()
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -165,6 +168,21 @@ class CommandCenterViewModel @Inject constructor(
                 sleepMinutes = snapshot.sleepMinutes
             )
 
+            // Seed the Go core's per-day store with real step totals for the last
+            // 7 days so the weekly aggregate reflects actual data, not just the
+            // current session.
+            val today = LocalDate.now()
+            for (i in 6 downTo 0) {
+                val day = today.minusDays(i.toLong())
+                val dayStart = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val dayEnd = day.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val daySteps = healthConnectManager.getStepsInRange(dayStart, dayEnd)
+                progressionEngine.setDailySteps(day.toString(), daySteps)
+            }
+
+            // Weekly steps are aggregated by the Go core from its per-day store.
+            _weeklySteps.value = progressionEngine.getWeeklySteps()
+
             questSyncUseCase.syncQuestsWithHealthData(snapshot)
         } catch (e: Exception) {
             android.util.Log.e("CommandCenterViewModel", "Failed to fetch daily health data", e)
@@ -236,6 +254,9 @@ class CommandCenterViewModel @Inject constructor(
 
                 val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
                 playerRepository.updatePlayer(updatedPlayer)
+
+                // Weekly steps are aggregated by the Go core from its per-day store.
+                _weeklySteps.value = progressionEngine.getWeeklySteps()
 
                 questSyncUseCase.syncQuestsWithHealthData(buildDailyHealthSnapshot(startOfDay))
 
