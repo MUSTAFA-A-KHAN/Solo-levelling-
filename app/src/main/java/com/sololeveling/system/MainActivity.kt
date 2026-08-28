@@ -23,8 +23,15 @@ import com.sololeveling.system.presentation.commandcenter.CommandCenterViewModel
 import com.sololeveling.system.presentation.leaderboard.LeaderboardScreen
 import com.sololeveling.system.presentation.profile.ProfileScreen
 import com.sololeveling.system.presentation.quest.QuestScreen
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.sololeveling.system.domain.usecase.StepSyncUseCase
 import com.sololeveling.system.presentation.history.HistoryScreen
 import com.sololeveling.system.presentation.theme.SystemTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import com.sololeveling.system.presentation.welcome.WelcomeScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -38,9 +45,19 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var authRepository: AuthRepository
     @Inject lateinit var systemPreferences: SystemPreferences
+    @Inject lateinit var stepSyncUseCase: StepSyncUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    stepSyncUseCase.executeSync()
+                }
+            }
+        })
+
         setContent {
             SystemTheme {
                 Surface(

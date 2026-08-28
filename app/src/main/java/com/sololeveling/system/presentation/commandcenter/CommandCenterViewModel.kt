@@ -22,6 +22,7 @@ import com.sololeveling.system.domain.repository.QuestRepository
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.domain.model.HealthSnapshot
 import com.sololeveling.system.domain.usecase.QuestSyncUseCase
+import com.sololeveling.system.domain.usecase.StepSyncUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -46,6 +47,7 @@ class CommandCenterViewModel @Inject constructor(
     private val questSyncUseCase: QuestSyncUseCase,
     private val authRepository: AuthRepository,
     private val leaderboardRepository: LeaderboardRepository,
+    private val stepSyncUseCase: StepSyncUseCase,
     val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
@@ -75,6 +77,7 @@ class CommandCenterViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             questGenerator.checkAndGenerateQuests()
+            stepSyncUseCase.executeSync()
             fetchDailyHealthData()
         }
 
@@ -219,7 +222,7 @@ class CommandCenterViewModel @Inject constructor(
     fun syncHealthData() {
         viewModelScope.launch {
             try {
-                val currentPlayer = _playerState.value ?: run {
+                if (_playerState.value == null) {
                     _connectionStatus.value = ConnectionStatus.Failed("Player not initialized")
                     return@launch
                 }
@@ -237,31 +240,11 @@ class CommandCenterViewModel @Inject constructor(
 
                 _connectionStatus.value = ConnectionStatus.Syncing
 
-                // Sync data since the last tracked sync.
-                // If the user has 0 XP (just installed before the fix), fallback to the start of today
-                // so they don't miss out on today's earlier steps.
-                val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                val since = if (currentPlayer.xp == 0L && currentPlayer.lastSyncTime > startOfDay) {
-                    startOfDay
-                } else {
-                    currentPlayer.lastSyncTime
-                }
+                stepSyncUseCase.executeSync()
 
-                val now = System.currentTimeMillis()
-
-                val steps = healthConnectManager.getRecentSteps(since)
-                val workoutMinutes = healthConnectManager.getRecentWorkoutDurationMinutes(since)
-
-                val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
-                playerRepository.updatePlayer(updatedPlayer)
-
-                // Weekly steps are aggregated by the Go core from its per-day store.
                 _weeklySteps.value = progressionEngine.getWeeklySteps()
-
-                questSyncUseCase.syncQuestsWithHealthData(buildDailyHealthSnapshot(startOfDay))
-
-                fetchDailyHealthData() // refresh the daily total shown on the dashboard
-                refreshLeaderboardEntry(updatedPlayer)
+                fetchDailyHealthData()
+                refreshLeaderboardEntry()
 
                 _connectionStatus.value = ConnectionStatus.Connected
             } catch (e: Exception) {
