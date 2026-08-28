@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -219,7 +220,11 @@ fun AccountSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(StatusError.copy(alpha = 0.15f))
-                        .clickable { onSignOut() }
+                        .clickable(
+                            onClick = onSignOut,
+                            onClickLabel = "Sign Out",
+                            role = Role.Button
+                        )
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -242,7 +247,11 @@ fun AccountSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(SystemNeonBlue.copy(alpha = 0.15f))
-                        .clickable { onSignIn() }
+                        .clickable(
+                            onClick = onSignIn,
+                            onClickLabel = "Sign In With Google",
+                            role = Role.Button
+                        )
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -277,7 +286,11 @@ fun IdentityPanel(player: Player, onEditName: () -> Unit = {}) {
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { onEditName() }
+                        modifier = Modifier.clickable(
+                            onClick = onEditName,
+                            onClickLabel = "Edit Name",
+                            role = Role.Button
+                        )
                     ) {
                         Text(
                             text = player.name.uppercase(),
