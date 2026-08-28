@@ -4,3 +4,7 @@
 ## 2024-05-15 - Improve button semantics for screen readers
 **Learning:** Generic layout containers with clickable modifiers (like Box or Row) lack semantic context for screen readers by default.
 **Action:** Always include `role = Role.Button` and `onClickLabel` with a clear description when making generic views clickable to improve the experience for TalkBack users.
+
+## 2025-02-18 - Compose Custom Buttons Accessibility
+**Learning:** Custom buttons built using generic containers like `Box` or `Row` with simple `.clickable` modifiers are announced as generic unlabelled clickables by TalkBack.
+**Action:** Always provide explicit semantic labels and roles directly in the modifier (e.g., `.clickable(onClick = ..., onClickLabel = "Action description", role = Role.Button)`) to ensure screen readers correctly announce these generic containers as interactive buttons and describe their functionality.
