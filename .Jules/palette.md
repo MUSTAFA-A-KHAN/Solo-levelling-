@@ -8,3 +8,6 @@
 ## 2025-02-18 - Compose Custom Buttons Accessibility
 **Learning:** Custom buttons built using generic containers like `Box` or `Row` with simple `.clickable` modifiers are announced as generic unlabelled clickables by TalkBack.
 **Action:** Always provide explicit semantic labels and roles directly in the modifier (e.g., `.clickable(onClick = ..., onClickLabel = "Action description", role = Role.Button)`) to ensure screen readers correctly announce these generic containers as interactive buttons and describe their functionality.
+## 2026-08-29 - Compose Custom System Panels Accessibility
+**Learning:** In Android Compose, custom interactive views constructed utilizing `SystemPanel` or other generic Box containers with `.clickable` are inherently announced as unlabelled interactables by TalkBack.
+**Action:** Consistently equip generic Compose containers featuring `.clickable` with clear semantic properties such as `onClickLabel = "description"` and `role = Role.Button` to provide imperative context for accessibility services.
