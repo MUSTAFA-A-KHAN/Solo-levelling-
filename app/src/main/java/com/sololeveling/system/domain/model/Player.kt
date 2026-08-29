@@ -11,7 +11,8 @@ data class Player(
     val attributes: PlayerAttributes = PlayerAttributes(),
     val availableAttributePoints: Int = 0,
     val footsteps: Long = 0, // Cumulative real-world steps tracked via Health Connect
-    val lastSyncTime: Long = System.currentTimeMillis() // Track when Health Connect was last synced
+    val lastSyncTime: Long = System.currentTimeMillis(), // Track when Health Connect was last synced
+    val hydrationData: HydrationData = HydrationData()
 )
 
 data class PlayerAttributes(

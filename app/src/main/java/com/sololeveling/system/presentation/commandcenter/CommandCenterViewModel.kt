@@ -22,6 +22,9 @@ import com.sololeveling.system.domain.repository.QuestRepository
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.domain.model.HealthSnapshot
 import com.sololeveling.system.domain.usecase.QuestSyncUseCase
+import com.sololeveling.system.data.notifications.SystemNotificationManager
+import com.sololeveling.system.domain.model.HydrationLog
+import com.sololeveling.system.domain.usecase.SystemAIUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -46,6 +49,8 @@ class CommandCenterViewModel @Inject constructor(
     private val questSyncUseCase: QuestSyncUseCase,
     private val authRepository: AuthRepository,
     private val leaderboardRepository: LeaderboardRepository,
+    private val notificationManager: SystemNotificationManager,
+    private val systemAI: SystemAIUseCase,
     val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
@@ -70,6 +75,9 @@ class CommandCenterViewModel @Inject constructor(
     private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Idle)
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
 
+    private val _aiResponse = MutableStateFlow("System: Awaiting command...")
+    val aiResponse: StateFlow<String> = _aiResponse.asStateFlow()
+
     private var hasSynced = false
 
     init {
@@ -82,6 +90,10 @@ class CommandCenterViewModel @Inject constructor(
             playerRepository.getPlayer().collectLatest { player ->
                 _playerState.value = player
                 _isLoading.value = false
+                if (player != null && player.hydrationData.currentIntakeLiters < 0.5) {
+                   // Initial reminder
+                   systemAI.triggerDailyEncouragement(player)
+                }
             }
         }
 
@@ -131,6 +143,44 @@ class CommandCenterViewModel @Inject constructor(
         leaderboardRepository.updateMyEntry(currentPlayer, completedQuests)
     }
 
+    fun addHydration(liters: Double) {
+        viewModelScope.launch {
+            val currentPlayer = _playerState.value ?: return@launch
+            val newLog = HydrationLog(amountLiters = liters)
+            val updatedHydration = currentPlayer.hydrationData.copy(
+                currentIntakeLiters = currentPlayer.hydrationData.currentIntakeLiters + liters,
+                lastDrinkTimestamp = System.currentTimeMillis(),
+                logs = currentPlayer.hydrationData.logs + newLog
+            )
+            val updatedPlayer = currentPlayer.copy(hydrationData = updatedHydration)
+            playerRepository.updatePlayer(updatedPlayer)
+            
+            notificationManager.showNotification(
+                "SYSTEM RECOVERY",
+                "Hydration recorded: +${liters}L. Recovery efficiency increased."
+            )
+            
+            checkHydrationGoal(updatedPlayer)
+            _aiResponse.value = systemAI.processCommand("drink water", updatedPlayer)
+        }
+    }
+    
+    fun sendAICommand(command: String) {
+        viewModelScope.launch {
+            val currentPlayer = _playerState.value
+            _aiResponse.value = systemAI.processCommand(command, currentPlayer)
+        }
+    }
+
+    private fun checkHydrationGoal(player: Player) {
+        if (player.hydrationData.currentIntakeLiters >= player.hydrationData.dailyGoalLiters) {
+            notificationManager.showNotification(
+                "QUEST UPDATE",
+                "Daily Hydration Goal achieved! Vitality restored."
+            )
+        }
+    }
+
     fun confirmRemoteOverride() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUser()?.uid ?: return@launch
@@ -168,9 +218,6 @@ class CommandCenterViewModel @Inject constructor(
                 sleepMinutes = snapshot.sleepMinutes
             )
 
-            // Seed the Go core's per-day store with real step totals for the last
-            // 7 days so the weekly aggregate reflects actual data, not just the
-            // current session.
             val today = LocalDate.now()
             for (i in 6 downTo 0) {
                 val day = today.minusDays(i.toLong())
@@ -180,7 +227,6 @@ class CommandCenterViewModel @Inject constructor(
                 progressionEngine.setDailySteps(day.toString(), daySteps)
             }
 
-            // Weekly steps are aggregated by the Go core from its per-day store.
             _weeklySteps.value = progressionEngine.getWeeklySteps()
 
             questSyncUseCase.syncQuestsWithHealthData(snapshot)
@@ -237,9 +283,6 @@ class CommandCenterViewModel @Inject constructor(
 
                 _connectionStatus.value = ConnectionStatus.Syncing
 
-                // Sync data since the last tracked sync.
-                // If the user has 0 XP (just installed before the fix), fallback to the start of today
-                // so they don't miss out on today's earlier steps.
                 val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                 val since = if (currentPlayer.xp == 0L && currentPlayer.lastSyncTime > startOfDay) {
                     startOfDay
@@ -255,12 +298,11 @@ class CommandCenterViewModel @Inject constructor(
                 val updatedPlayer = progressionEngine.processHealthData(currentPlayer, steps, workoutMinutes, now)
                 playerRepository.updatePlayer(updatedPlayer)
 
-                // Weekly steps are aggregated by the Go core from its per-day store.
                 _weeklySteps.value = progressionEngine.getWeeklySteps()
 
                 questSyncUseCase.syncQuestsWithHealthData(buildDailyHealthSnapshot(startOfDay))
 
-                fetchDailyHealthData() // refresh the daily total shown on the dashboard
+                fetchDailyHealthData()
                 refreshLeaderboardEntry(updatedPlayer)
 
                 _connectionStatus.value = ConnectionStatus.Connected
