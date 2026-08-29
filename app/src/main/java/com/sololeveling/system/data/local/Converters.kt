@@ -47,6 +47,6 @@ class Converters {
     fun toHydrationData(value: String?): HydrationData? {
         if (value == null) return null
         val type: Type = object : TypeToken<HydrationData>() {}.type
-        return gson.fromJson(value, type)
+        return gson.fromJson(value, type) ?: HydrationData()
     }
 }
