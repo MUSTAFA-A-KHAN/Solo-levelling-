@@ -221,10 +221,9 @@ fun AccountSection(
                         .fillMaxWidth()
                         .background(StatusError.copy(alpha = 0.15f))
                         .clickable(
-                            onClick = onSignOut,
-                            onClickLabel = "Sign Out",
+                            onClickLabel = "Sign out of your account",
                             role = Role.Button
-                        )
+                        ) { onSignOut() }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -248,10 +247,9 @@ fun AccountSection(
                         .fillMaxWidth()
                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                         .clickable(
-                            onClick = onSignIn,
-                            onClickLabel = "Sign In With Google",
+                            onClickLabel = "Sign in with your Google account",
                             role = Role.Button
-                        )
+                        ) { onSignIn() }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -287,10 +285,9 @@ fun IdentityPanel(player: Player, onEditName: () -> Unit = {}) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clickable(
-                            onClick = onEditName,
-                            onClickLabel = "Edit Name",
+                            onClickLabel = "Edit player name",
                             role = Role.Button
-                        )
+                        ) { onEditName() }
                     ) {
                         Text(
                             text = player.name.uppercase(),
