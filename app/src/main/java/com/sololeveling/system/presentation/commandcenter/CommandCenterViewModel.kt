@@ -270,6 +270,22 @@ class CommandCenterViewModel @Inject constructor(
         return enabled
     }
 
+    /**
+     * Sends a test notification to verify the notification system is working.
+     */
+    fun sendTestNotification() {
+        val success = notificationManager.showNotification(
+            title = "SYSTEM TEST",
+            message = "Notification system operational. All systems functioning.",
+            notificationId = TEST_NOTIFICATION_ID
+        )
+        if (!success) {
+            viewModelScope.launch {
+                _uiEvent.emit(UiEvent.RequestNotificationPermission)
+            }
+        }
+    }
+
     fun confirmRemoteOverride() {
         viewModelScope.launch {
             val uid = authRepository.getCurrentUser()?.uid ?: return@launch
@@ -424,5 +440,6 @@ class CommandCenterViewModel @Inject constructor(
     companion object {
         const val HYDRATION_GOAL_NOTIFICATION_ID = 1002
         const val HYDRATION_LOGGED_NOTIFICATION_ID = 1003
+        const val TEST_NOTIFICATION_ID = 9999
     }
 }

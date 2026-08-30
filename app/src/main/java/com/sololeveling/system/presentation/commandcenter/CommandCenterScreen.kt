@@ -171,6 +171,40 @@ fun CommandCenterScreen(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
+            // Test Notification Button
+            SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "SYSTEM DIAGNOSTICS",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = SystemNeonPurple,
+                        letterSpacing = 2.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { viewModel.sendTestNotification() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SystemNeonPurple.copy(alpha = 0.2f),
+                            contentColor = SystemNeonPurple
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "SEND TEST NOTIFICATION",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Tap to verify notification system is operational",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.5f)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
             AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
             Spacer(modifier = Modifier.height(24.dp))
             DailyQuestOverview(activeQuests)
