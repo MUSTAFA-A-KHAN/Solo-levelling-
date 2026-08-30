@@ -5,11 +5,14 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.updateTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -175,93 +179,136 @@ fun CommandCenterScreen(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.primary,
+                indicator = { tabPositions ->
+                    if (tabPositions.isNotEmpty()) {
+                        val transition = updateTransition(selectedTab, label = "tab_indicator")
+                        val start by transition.animateDp(label = "indicator_start") { tabPositions[it].left }
+                        val end by transition.animateDp(label = "indicator_end") { tabPositions[it].right }
+                        Box(
+                            Modifier
+                                .offset(x = start)
+                                .width(end - start)
+                                .height(3.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(MaterialTheme.colorScheme.primary, SystemNeonPurple)
+                                    ),
+                                    RoundedCornerShape(2.dp)
+                                )
+                        )
+                    }
+                },
                 divider = {}
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
-                        text = { Text(title, style = MaterialTheme.typography.labelMedium) }
+                        text = {
+                            val textColor by animateColorAsState(
+                                targetValue = if (selectedTab == index) MaterialTheme.colorScheme.primary else Color.Gray,
+                                animationSpec = tween(200),
+                                label = "tab_text_color"
+                            )
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = textColor,
+                                letterSpacing = 2.sp,
+                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            Column(
+            AnimatedContent(
+                targetState = selectedTab,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(scrollState)
-            ) {
-                when (selectedTab) {
-                    0 -> {
-                        HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
-                        Spacer(modifier = Modifier.height(24.dp))
-                        player?.let { p ->
-                            HydrationPanel(
-                                current = p.hydrationData.currentIntakeLiters,
-                                goal = p.hydrationData.dailyGoalLiters,
-                                reminderEnabled = p.hydrationData.reminderEnabled,
-                                reminderInterval = p.hydrationData.reminderIntervalMinutes,
-                                onAddWater = { viewModel.addHydration(it) },
-                                onToggleReminder = { enabled ->
-                                    if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                    } else {
-                                        viewModel.toggleHydrationReminders(enabled)
-                                    }
-                                },
-                                onSetInterval = { viewModel.setHydrationReminderInterval(it) },
-                                onReset = { viewModel.resetHydration() }
-                            )
+                    .weight(1f),
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
+                        fadeOut(animationSpec = tween(90))
+                },
+                label = "tab_content"
+            ) { tab ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                ) {
+                    when (tab) {
+                        0 -> {
+                            HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
                             Spacer(modifier = Modifier.height(24.dp))
-                        }
-                    }
-                    1 -> {
-                        // Test Notification Button
-                        SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = "SYSTEM DIAGNOSTICS",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = SystemNeonPurple,
-                                    letterSpacing = 2.sp
+                            player?.let { p ->
+                                HydrationPanel(
+                                    current = p.hydrationData.currentIntakeLiters,
+                                    goal = p.hydrationData.dailyGoalLiters,
+                                    reminderEnabled = p.hydrationData.reminderEnabled,
+                                    reminderInterval = p.hydrationData.reminderIntervalMinutes,
+                                    onAddWater = { viewModel.addHydration(it) },
+                                    onToggleReminder = { enabled ->
+                                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        } else {
+                                            viewModel.toggleHydrationReminders(enabled)
+                                        }
+                                    },
+                                    onSetInterval = { viewModel.setHydrationReminderInterval(it) },
+                                    onReset = { viewModel.resetHydration() }
                                 )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Button(
-                                    onClick = { viewModel.sendTestNotification() },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = SystemNeonPurple.copy(alpha = 0.2f),
-                                        contentColor = SystemNeonPurple
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = "SEND TEST NOTIFICATION",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Tap to verify notification system is operational",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color.White.copy(alpha = 0.5f)
-                                )
+                                Spacer(modifier = Modifier.height(24.dp))
                             }
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
-                        AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
-                        Spacer(modifier = Modifier.height(24.dp))
-                        DailyQuestOverview(activeQuests)
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
-                    2 -> {
-                        ShadowArmyPanel()
-                        Spacer(modifier = Modifier.height(24.dp))
-                        QuotesPanel()
-                        Spacer(modifier = Modifier.height(24.dp))
+                        1 -> {
+                            // Test Notification Button
+                            SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = "SYSTEM DIAGNOSTICS",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = SystemNeonPurple,
+                                        letterSpacing = 2.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Button(
+                                        onClick = { viewModel.sendTestNotification() },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = SystemNeonPurple.copy(alpha = 0.2f),
+                                            contentColor = SystemNeonPurple
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "SEND TEST NOTIFICATION",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Tap to verify notification system is operational",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(24.dp))
+                            AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
+                            Spacer(modifier = Modifier.height(24.dp))
+                            DailyQuestOverview(activeQuests)
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+                        2 -> {
+                            ShadowArmyPanel()
+                            Spacer(modifier = Modifier.height(24.dp))
+                            QuotesPanel()
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
                     }
                 }
             }
