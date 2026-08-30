@@ -75,7 +75,8 @@ fun CommandCenterScreenPreview() {
                 reminderInterval = 60,
                 onAddWater = {},
                 onToggleReminder = {},
-                onSetInterval = {}
+                onSetInterval = {},
+                onReset = {}
             )
             Spacer(Modifier.height(24.dp))
             AITerminalPanel(response = "System: All parameters normal. Awaiting further growth.", onSendCommand = {})
