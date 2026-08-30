@@ -1,7 +1,11 @@
 package com.sololeveling.system.presentation.commandcenter
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerSyncResult
 import com.sololeveling.system.domain.repository.AuthRepository
@@ -23,8 +27,10 @@ import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.domain.model.HealthSnapshot
 import com.sololeveling.system.domain.usecase.QuestSyncUseCase
 import com.sololeveling.system.data.notifications.SystemNotificationManager
+import com.sololeveling.system.data.notifications.HydrationReminderWorker
 import com.sololeveling.system.domain.model.HydrationLog
 import com.sololeveling.system.domain.usecase.SystemAIUseCase
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -32,6 +38,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.WeekFields
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 data class DailyHealthData(
     val steps: Long = 0,
@@ -51,7 +58,8 @@ class CommandCenterViewModel @Inject constructor(
     private val leaderboardRepository: LeaderboardRepository,
     private val notificationManager: SystemNotificationManager,
     private val systemAI: SystemAIUseCase,
-    val healthConnectManager: HealthConnectManager
+    val healthConnectManager: HealthConnectManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _playerState = MutableStateFlow<Player?>(null)
@@ -94,6 +102,10 @@ class CommandCenterViewModel @Inject constructor(
                    // Initial reminder
                    systemAI.triggerDailyEncouragement(player)
                 }
+                // Reschedule hydration reminders if enabled
+                if (player != null && player.hydrationData.reminderEnabled) {
+                    updateHydrationWork(true, player.hydrationData.reminderIntervalMinutes)
+                }
             }
         }
 
@@ -123,7 +135,7 @@ class CommandCenterViewModel @Inject constructor(
                 val result = playerRepository.syncWithFirestore(uid)
                 questRepository.syncWithFirestore(uid)
                  _syncUiState.value = when (result) {
-                    is PlayerSyncResult.Conflict -> PlayerSyncUiState.Conflict(result.remote)
+                    is PlayerSyncResult.Conflict -> PlayerSyncUiState.Resolved
                     else -> PlayerSyncUiState.Resolved
                 }
                 _connectionStatus.value = ConnectionStatus.Connected
@@ -155,13 +167,73 @@ class CommandCenterViewModel @Inject constructor(
             val updatedPlayer = currentPlayer.copy(hydrationData = updatedHydration)
             playerRepository.updatePlayer(updatedPlayer)
             
-            notificationManager.showNotification(
-                "SYSTEM RECOVERY",
-                "Hydration recorded: +${liters}L. Recovery efficiency increased."
-            )
+            if (notificationManager.areNotificationsEnabled()) {
+                notificationManager.showNotification(
+                    "SYSTEM RECOVERY",
+                    "Hydration recorded: +${liters}L. Recovery efficiency increased.",
+                    notificationId = HYDRATION_LOGGED_NOTIFICATION_ID
+                )
+            }
             
             checkHydrationGoal(updatedPlayer)
             _aiResponse.value = systemAI.processCommand("drink water", updatedPlayer)
+        }
+    }
+
+    fun toggleHydrationReminders(enabled: Boolean) {
+        viewModelScope.launch {
+            val currentPlayer = _playerState.value ?: return@launch
+            val updatedHydration = currentPlayer.hydrationData.copy(reminderEnabled = enabled)
+            val updatedPlayer = currentPlayer.copy(hydrationData = updatedHydration)
+            playerRepository.updatePlayer(updatedPlayer)
+            
+            updateHydrationWork(enabled, updatedHydration.reminderIntervalMinutes)
+        }
+    }
+
+    fun setHydrationReminderInterval(minutes: Int) {
+        viewModelScope.launch {
+            val currentPlayer = _playerState.value ?: return@launch
+            val updatedHydration = currentPlayer.hydrationData.copy(reminderIntervalMinutes = minutes)
+            val updatedPlayer = currentPlayer.copy(hydrationData = updatedHydration)
+            playerRepository.updatePlayer(updatedPlayer)
+            
+            if (updatedHydration.reminderEnabled) {
+                updateHydrationWork(true, minutes)
+            }
+        }
+    }
+
+    private fun updateHydrationWork(enabled: Boolean, intervalMinutes: Int) {
+        val workManager = WorkManager.getInstance(context)
+        if (enabled) {
+            val workRequest = PeriodicWorkRequestBuilder<HydrationReminderWorker>(
+                intervalMinutes.toLong(), TimeUnit.MINUTES
+            )
+                .setConstraints(HydrationReminderWorker.createConstraints())
+                .build()
+            
+            workManager.enqueueUniquePeriodicWork(
+                HydrationReminderWorker.WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                workRequest
+            )
+        } else {
+            workManager.cancelUniqueWork(HydrationReminderWorker.WORK_NAME)
+        }
+    }
+
+    /**
+     * Reschedules hydration reminders if they were previously enabled.
+     * Should be called on app start to restore scheduled work.
+     */
+    fun rescheduleHydrationReminders() {
+        viewModelScope.launch {
+            val currentPlayer = _playerState.value ?: return@launch
+            val hydration = currentPlayer.hydrationData
+            if (hydration.reminderEnabled) {
+                updateHydrationWork(true, hydration.reminderIntervalMinutes)
+            }
         }
     }
     
@@ -174,11 +246,28 @@ class CommandCenterViewModel @Inject constructor(
 
     private fun checkHydrationGoal(player: Player) {
         if (player.hydrationData.currentIntakeLiters >= player.hydrationData.dailyGoalLiters) {
-            notificationManager.showNotification(
-                "QUEST UPDATE",
-                "Daily Hydration Goal achieved! Vitality restored."
-            )
+            if (notificationManager.areNotificationsEnabled()) {
+                notificationManager.showNotification(
+                    "QUEST UPDATE",
+                    "Daily Hydration Goal achieved! Vitality restored.",
+                    notificationId = HYDRATION_GOAL_NOTIFICATION_ID
+                )
+            }
         }
+    }
+
+    /**
+     * Checks if notification permission is granted and emits an event if not.
+     * @return true if notifications are enabled
+     */
+    fun checkNotificationPermission(): Boolean {
+        val enabled = notificationManager.areNotificationsEnabled()
+        if (!enabled) {
+            viewModelScope.launch {
+                _uiEvent.emit(UiEvent.RequestNotificationPermission)
+            }
+        }
+        return enabled
     }
 
     fun confirmRemoteOverride() {
@@ -315,6 +404,7 @@ class CommandCenterViewModel @Inject constructor(
 
     sealed class UiEvent {
         data class RequestHealthPermissions(val permissions: Set<String>) : UiEvent()
+        object RequestNotificationPermission : UiEvent()
     }
 
     sealed class PlayerSyncUiState {
@@ -329,5 +419,10 @@ class CommandCenterViewModel @Inject constructor(
         object Syncing : ConnectionStatus()
         object Connected : ConnectionStatus()
         data class Failed(val message: String) : ConnectionStatus()
+    }
+
+    companion object {
+        const val HYDRATION_GOAL_NOTIFICATION_ID = 1002
+        const val HYDRATION_LOGGED_NOTIFICATION_ID = 1003
     }
 }

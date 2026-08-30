@@ -1,6 +1,9 @@
 package com.sololeveling.system.presentation.commandcenter
 
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -11,6 +14,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,7 +41,6 @@ import com.sololeveling.system.domain.model.Rank
 import com.sololeveling.system.presentation.components.AnimatedFireEffect
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.HolographicProgressBar
-import com.sololeveling.system.presentation.components.RankEmblem
 import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.components.PlayerStatusCard
 import com.sololeveling.system.presentation.theme.*
@@ -63,7 +68,15 @@ fun CommandCenterScreenPreview() {
             Spacer(Modifier.height(24.dp))
             HealthOverviewPanel(DailyHealthData(steps = 8421, workoutMinutes = 47, caloriesBurned = 426.0, sleepMinutes = 452), weeklySteps = 52340, totalSteps = 184230)
             Spacer(Modifier.height(24.dp))
-            HydrationPanel(current = 1.2, goal = 2.0, onAddWater = {})
+            HydrationPanel(
+                current = 1.2, 
+                goal = 2.0, 
+                reminderEnabled = true,
+                reminderInterval = 60,
+                onAddWater = {},
+                onToggleReminder = {},
+                onSetInterval = {}
+            )
             Spacer(Modifier.height(24.dp))
             AITerminalPanel(response = "System: All parameters normal. Awaiting further growth.", onSendCommand = {})
             Spacer(Modifier.height(24.dp))
@@ -98,11 +111,24 @@ fun CommandCenterScreen(
         }
     }
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.toggleHydrationReminders(true)
+        }
+    }
+
     LaunchedEffect(true) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is CommandCenterViewModel.UiEvent.RequestHealthPermissions -> {
                     permissionLauncher.launch(event.permissions)
+                }
+                CommandCenterViewModel.UiEvent.RequestNotificationPermission -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
                 }
             }
         }
@@ -128,7 +154,21 @@ fun CommandCenterScreen(
             HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
             Spacer(modifier = Modifier.height(24.dp))
             player?.let { p ->
-                HydrationPanel(current = p.hydrationData.currentIntakeLiters, goal = p.hydrationData.dailyGoalLiters, onAddWater = { viewModel.addHydration(it) })
+                HydrationPanel(
+                    current = p.hydrationData.currentIntakeLiters,
+                    goal = p.hydrationData.dailyGoalLiters,
+                    reminderEnabled = p.hydrationData.reminderEnabled,
+                    reminderInterval = p.hydrationData.reminderIntervalMinutes,
+                    onAddWater = { viewModel.addHydration(it) },
+                    onToggleReminder = { enabled ->
+                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            viewModel.toggleHydrationReminders(enabled)
+                        }
+                    },
+                    onSetInterval = { viewModel.setHydrationReminderInterval(it) }
+                )
                 Spacer(modifier = Modifier.height(24.dp))
             }
             AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
@@ -176,15 +216,53 @@ fun ActionItem(title: String, subtitle: String, color: Color) {
 }
 
 @Composable
-fun HydrationPanel(current: Double, goal: Double, onAddWater: (Double) -> Unit) {
+fun HydrationPanel(
+    current: Double,
+    goal: Double,
+    reminderEnabled: Boolean,
+    reminderInterval: Int,
+    onAddWater: (Double) -> Unit,
+    onToggleReminder: (Boolean) -> Unit,
+    onSetInterval: (Int) -> Unit
+) {
     SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonBlue) {
         Column {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "RECOVERY STATUS: HYDRATION", style = MaterialTheme.typography.labelLarge, color = SystemNeonBlue)
-                Text(text = "${String.format("%.1f", current)} / ${String.format("%.1f", goal)} L", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                IconButton(onClick = { onToggleReminder(!reminderEnabled) }) {
+                    Icon(
+                        imageVector = if (reminderEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
+                        contentDescription = "Toggle Reminders",
+                        tint = if (reminderEnabled) SystemNeonBlue else Color.Gray
+                    )
+                }
             }
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                 Text(text = "${String.format("%.1f", current)} / ${String.format("%.1f", goal)} L", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                 if (reminderEnabled) {
+                     Text(text = "System alerts every ${reminderInterval}m", style = MaterialTheme.typography.labelSmall, color = SystemNeonBlue.copy(alpha = 0.7f))
+                 }
+            }
+            
             Spacer(modifier = Modifier.height(12.dp))
             HolographicProgressBar(progress = (current / goal).toFloat().coerceIn(0f, 1f), color = SystemNeonBlue)
+            
+            if (reminderEnabled) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = "ADJUST ALERT FREQUENCY", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(30, 60, 90, 120).forEach { mins ->
+                        HydrationButton(
+                            label = "${mins}m",
+                            onClick = { onSetInterval(mins) },
+                            modifier = Modifier.weight(1f),
+                            isSelected = reminderInterval == mins
+                        )
+                    }
+                }
+            }
+            
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HydrationButton(label = "+250ml", onClick = { onAddWater(0.25) }, modifier = Modifier.weight(1f))
@@ -195,12 +273,20 @@ fun HydrationPanel(current: Double, goal: Double, onAddWater: (Double) -> Unit) 
 }
 
 @Composable
-fun HydrationButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun HydrationButton(
+    label: String, 
+    onClick: () -> Unit, 
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false
+) {
+    val containerColor = if (isSelected) SystemNeonBlue.copy(alpha = 0.3f) else SystemNeonBlue.copy(alpha = 0.1f)
+    val borderColor = if (isSelected) SystemNeonBlue else SystemNeonBlue.copy(alpha = 0.5f)
+    
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = SystemNeonBlue.copy(alpha = 0.1f), contentColor = SystemNeonBlue),
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor, contentColor = SystemNeonBlue),
         shape = RoundedCornerShape(4.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, SystemNeonBlue.copy(alpha = 0.5f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
         modifier = modifier.height(36.dp),
         contentPadding = PaddingValues(0.dp)
     ) {
