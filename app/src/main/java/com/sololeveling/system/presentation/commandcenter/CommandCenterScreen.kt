@@ -6,23 +6,29 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -89,6 +95,7 @@ fun CommandCenterScreenPreview() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CommandCenterScreen(
     viewModel: CommandCenterViewModel = hiltViewModel(),
@@ -140,81 +147,127 @@ fun CommandCenterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(text = "SYSTEM ONLINE", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
-            ConnectionStatusIndicator(status = connectionStatus, onDismissError = { viewModel.clearConnectionError() })
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "COMMAND CENTER", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 4.sp)
-            Spacer(modifier = Modifier.height(24.dp))
+            val tabs = listOf("STATUS", "SYSTEM", "ARMY")
+            var selectedTab by remember { mutableStateOf(0) }
+
+            Column {
+                Text(text = "SYSTEM ONLINE", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
+                ConnectionStatusIndicator(status = connectionStatus, onDismissError = { viewModel.clearConnectionError() })
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "COMMAND CENTER", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 4.sp)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             player?.let { p -> PlayerStatusCard(p, onClick = onNavigateToProfile) }
             Spacer(modifier = Modifier.height(16.dp))
             DashboardActions(activeQuests.size, onNavigateToQuests, onNavigateToLeaderboard, onSync = { viewModel.syncHealthData() })
-            Spacer(modifier = Modifier.height(24.dp))
-            HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
-            Spacer(modifier = Modifier.height(24.dp))
-            player?.let { p ->
-                HydrationPanel(
-                    current = p.hydrationData.currentIntakeLiters,
-                    goal = p.hydrationData.dailyGoalLiters,
-                    reminderEnabled = p.hydrationData.reminderEnabled,
-                    reminderInterval = p.hydrationData.reminderIntervalMinutes,
-                    onAddWater = { viewModel.addHydration(it) },
-                    onToggleReminder = { enabled ->
-                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            viewModel.toggleHydrationReminders(enabled)
-                        }
-                    },
-                    onSetInterval = { viewModel.setHydrationReminderInterval(it) },
-                    onReset = { viewModel.resetHydration() }
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-            // Test Notification Button
-            SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "SYSTEM DIAGNOSTICS",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = SystemNeonPurple,
-                        letterSpacing = 2.sp
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { viewModel.sendTestNotification() },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SystemNeonPurple.copy(alpha = 0.2f),
-                            contentColor = SystemNeonPurple
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "SEND TEST NOTIFICATION",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary,
+                indicator = { tabPositions ->
+                    if (tabPositions.isNotEmpty()) {
+                        val current = tabPositions[selectedTab]
+                        Box(
+                            Modifier
+                                .tabIndicatorOffset(current)
+                                .height(3.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(MaterialTheme.colorScheme.primary, SystemNeonPurple)
+                                    ),
+                                    RoundedCornerShape(2.dp)
+                                )
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tap to verify notification system is operational",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.5f)
+                },
+                divider = {}
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = {
+                            val textColor by animateColorAsState(
+                                targetValue = if (selectedTab == index) MaterialTheme.colorScheme.primary else Color.Gray,
+                                animationSpec = tween(200),
+                                label = "tab_text_color"
+                            )
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = textColor,
+                                letterSpacing = 2.sp,
+                                fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
-            Spacer(modifier = Modifier.height(24.dp))
-            DailyQuestOverview(activeQuests)
-            Spacer(modifier = Modifier.height(24.dp))
-            ShadowArmyPanel()
-            Spacer(modifier = Modifier.height(32.dp))
-            QuotesPanel()
-            Spacer(modifier = Modifier.height(32.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+            when (selectedTab) {
+                0 -> CardPager(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    pages = listOf(
+                        { HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L) },
+                        {
+                            player?.let { p ->
+                                HydrationPanel(
+                                    current = p.hydrationData.currentIntakeLiters,
+                                    goal = p.hydrationData.dailyGoalLiters,
+                                    reminderEnabled = p.hydrationData.reminderEnabled,
+                                    reminderInterval = p.hydrationData.reminderIntervalMinutes,
+                                    onAddWater = { viewModel.addHydration(it) },
+                                    onToggleReminder = { enabled ->
+                                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        } else {
+                                            viewModel.toggleHydrationReminders(enabled)
+                                        }
+                                    },
+                                    onSetInterval = { viewModel.setHydrationReminderInterval(it) },
+                                    onReset = { viewModel.resetHydration() }
+                                )
+                            }
+                        }
+                    )
+                )
+                1 -> CardPager(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    pages = listOf(
+                        {
+                            SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Text(text = "SYSTEM DIAGNOSTICS", style = MaterialTheme.typography.labelLarge, color = SystemNeonPurple, letterSpacing = 2.sp)
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Button(
+                                        onClick = { viewModel.sendTestNotification() },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(containerColor = SystemNeonPurple.copy(alpha = 0.2f), contentColor = SystemNeonPurple),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(text = "SEND TEST NOTIFICATION", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(text = "Tap to verify notification system is operational", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
+                                }
+                            }
+                        },
+                        { AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) }) },
+                        { DailyQuestOverview(activeQuests) }
+                    )
+                )
+                2 -> CardPager(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    pages = listOf(
+                        { ShadowArmyPanel() },
+                        { QuotesPanel() }
+                    )
+                )
+            }
         }
     }
 
@@ -238,6 +291,55 @@ fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -
         }
         SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
             ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CardPager(
+    modifier: Modifier = Modifier,
+    pages: List<@Composable () -> Unit>
+) {
+    if (pages.isEmpty()) return
+    val pagerState = rememberPagerState(initialPage = 0) { pages.size }
+    Column(modifier = modifier.fillMaxSize()) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) { page ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                pages[page]()
+            }
+        }
+        if (pages.size > 1) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(pages.size) { index ->
+                    val selected = index == pagerState.currentPage
+                    Box(
+                        modifier = Modifier
+                            .size(if (selected) 10.dp else 8.dp)
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.5f),
+                                CircleShape
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+            }
         }
     }
 }
