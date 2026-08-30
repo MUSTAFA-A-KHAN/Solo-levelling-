@@ -180,6 +180,19 @@ class CommandCenterViewModel @Inject constructor(
         }
     }
 
+    fun resetHydration() {
+        viewModelScope.launch {
+            val currentPlayer = _playerState.value ?: return@launch
+            val updatedHydration = currentPlayer.hydrationData.copy(
+                currentIntakeLiters = 0.0,
+                lastDrinkTimestamp = 0,
+                logs = emptyList()
+            )
+            val updatedPlayer = currentPlayer.copy(hydrationData = updatedHydration)
+            playerRepository.updatePlayer(updatedPlayer)
+        }
+    }
+
     fun toggleHydrationReminders(enabled: Boolean) {
         viewModelScope.launch {
             val currentPlayer = _playerState.value ?: return@launch

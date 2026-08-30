@@ -75,7 +75,8 @@ fun CommandCenterScreenPreview() {
                 reminderInterval = 60,
                 onAddWater = {},
                 onToggleReminder = {},
-                onSetInterval = {}
+                onSetInterval = {},
+                onReset = {}
             )
             Spacer(Modifier.height(24.dp))
             AITerminalPanel(response = "System: All parameters normal. Awaiting further growth.", onSendCommand = {})
@@ -167,7 +168,8 @@ fun CommandCenterScreen(
                             viewModel.toggleHydrationReminders(enabled)
                         }
                     },
-                    onSetInterval = { viewModel.setHydrationReminderInterval(it) }
+                    onSetInterval = { viewModel.setHydrationReminderInterval(it) },
+                    onReset = { viewModel.resetHydration() }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -257,7 +259,8 @@ fun HydrationPanel(
     reminderInterval: Int,
     onAddWater: (Double) -> Unit,
     onToggleReminder: (Boolean) -> Unit,
-    onSetInterval: (Int) -> Unit
+    onSetInterval: (Int) -> Unit,
+    onReset: () -> Unit
 ) {
     SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonBlue) {
         Column {
@@ -302,6 +305,14 @@ fun HydrationPanel(
                 HydrationButton(label = "+250ml", onClick = { onAddWater(0.25) }, modifier = Modifier.weight(1f))
                 HydrationButton(label = "+500ml", onClick = { onAddWater(0.5) }, modifier = Modifier.weight(1f))
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            HydrationButton(
+                label = "RESET",
+                onClick = onReset,
+                modifier = Modifier.fillMaxWidth(),
+                isSelected = false
+            )
         }
     }
 }
