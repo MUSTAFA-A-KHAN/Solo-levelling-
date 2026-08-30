@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -100,6 +102,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.48")
     ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("androidx.hilt:hilt-work:1.1.0")
+    ksp("androidx.hilt:hilt-compiler:1.1.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.0")
@@ -114,6 +118,9 @@ dependencies {
 
     // Health Connect
     implementation("androidx.health.connect:connect-client:1.0.0-alpha11")
+
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
@@ -143,11 +150,23 @@ dependencies {
 tasks.register<Exec>("buildGoCore") {
     workingDir = file("../core-go")
 
+    val isWindows = System.getProperty("os.name").lowercase().contains("win")
     val gopath = System.getenv("GOPATH") ?: "${System.getProperty("user.home")}/go"
-    environment("PATH", "${System.getenv("PATH")}:$gopath/bin")
+    val goBin = file("$gopath/bin").absolutePath
+    
+    // Use the correct path separator for the OS
+    val pathSeparator = File.pathSeparator
+    val currentPath = System.getenv("PATH") ?: ""
+    environment("PATH", "$goBin$pathSeparator$currentPath")
 
     // Using environment variables or defaults that work for GitHub Actions & local
-    val androidHome = System.getenv("ANDROID_HOME") ?: "${System.getProperty("user.home")}/Android/Sdk"
+    val androidHomeCandidates = listOfNotNull(
+        System.getenv("ANDROID_HOME"),
+        "${System.getProperty("user.home")}/Android/Sdk",
+        "${System.getProperty("user.home")}/AppData/Local/Android/Sdk"
+    )
+    val androidHome = androidHomeCandidates.firstOrNull { file(it).exists() }
+        ?: androidHomeCandidates.first()
     environment("ANDROID_HOME", androidHome)
 
     // Check if ANDROID_NDK_HOME is set, otherwise rely on gomobile's discovery
@@ -161,13 +180,12 @@ tasks.register<Exec>("buildGoCore") {
         file("../app/libs").mkdirs()
     }
 
-    commandLine(
-        "gomobile", "bind",
-        "-target=android",
-        "-androidapi=26",
-        "-o", "../app/libs/corego.aar",
-        "./api"
-    )
+    if (isWindows) {
+        // Use cmd /c on Windows to ensure gomobile is resolved correctly
+        commandLine("cmd", "/c", "gomobile", "bind", "-target=android", "-androidapi=26", "-o", "../app/libs/corego.aar", "./api")
+    } else {
+        commandLine("gomobile", "bind", "-target=android", "-androidapi=26", "-o", "../app/libs/corego.aar", "./api")
+    }
 }
 
 tasks.named("preBuild") {

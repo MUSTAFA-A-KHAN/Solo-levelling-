@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.PlayerAttributes
 import com.sololeveling.system.domain.model.Rank
+import com.sololeveling.system.domain.model.HydrationData
 
 @Entity(tableName = "player_table")
 data class PlayerEntity(
@@ -23,7 +24,8 @@ data class PlayerEntity(
     val endurance: Double,
     val availableAttributePoints: Int,
     val footsteps: Long,
-    val lastSyncTime: Long
+    val lastSyncTime: Long,
+    val hydrationData: HydrationData
 )
 
 fun PlayerEntity.toDomain(): Player {
@@ -45,7 +47,8 @@ fun PlayerEntity.toDomain(): Player {
         ),
         availableAttributePoints = availableAttributePoints,
         footsteps = footsteps,
-        lastSyncTime = lastSyncTime
+        lastSyncTime = lastSyncTime,
+        hydrationData = hydrationData
     )
 }
 
@@ -66,6 +69,7 @@ fun Player.toEntity(): PlayerEntity {
         endurance = attributes.endurance,
         availableAttributePoints = availableAttributePoints,
         footsteps = footsteps,
-        lastSyncTime = lastSyncTime
+        lastSyncTime = lastSyncTime,
+        hydrationData = hydrationData
     )
 }

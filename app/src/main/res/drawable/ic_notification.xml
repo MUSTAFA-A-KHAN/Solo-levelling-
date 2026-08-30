@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Water drop shape for hydration reminders -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2.69l-5.66,5.66c-3.12,3.12 -3.12,8.19 0,11.31C7.89,21.22 9.89,22 12,22s4.11,-0.78 5.66,-2.34c3.12,-3.12 3.12,-8.19 0,-11.31L12,2.69zM12,19c-1.1,0 -2,-0.9 -2,-2c0,-1.1 0.9,-2 2,-2s2,0.9 2,2C14,18.1 13.1,19 12,19zM12,14c-2.76,0 -5,-2.24 -5,-5c0,-2.76 2.24,-5 5,-5s5,2.24 5,5C17,11.76 14.76,14 12,14z"/>
+    <!-- Inner highlight -->
+    <path
+        android:fillColor="#00D9FF"
+        android:pathData="M12,4.5l4.5,4.5c2.5,2.5 2.5,6.5 0,9C15.5,19 13.8,19.5 12,19.5S8.5,19 7.5,18c-2.5,-2.5 -2.5,-6.5 0,-9L12,4.5z"/>
+    <!-- Shine effect -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.6"
+        android:pathData="M10,8.5c-0.8,0 -1.5,0.7 -1.5,1.5c0,0.3 0.2,0.5 0.5,0.5s0.5,-0.2 0.5,-0.5c0,-0.3 0.2,-0.5 0.5,-0.5c0.3,0 0.5,-0.2 0.5,-0.5S10.3,8.5 10,8.5z"/>
+</vector>

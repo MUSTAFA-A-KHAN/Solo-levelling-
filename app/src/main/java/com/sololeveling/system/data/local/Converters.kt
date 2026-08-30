@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sololeveling.system.domain.model.AttributeType
 import com.sololeveling.system.domain.model.ActivityRequirement
+import com.sololeveling.system.domain.model.HydrationData
 import java.lang.reflect.Type
 
 class Converters {
@@ -35,5 +36,17 @@ class Converters {
         if (value == null) return null
         val type: Type = object : TypeToken<ActivityRequirement>() {}.type
         return gson.fromJson(value, type)
+    }
+
+    @TypeConverter
+    fun fromHydrationData(value: HydrationData?): String? {
+        return gson.toJson(value)
+    }
+
+    @TypeConverter
+    fun toHydrationData(value: String?): HydrationData? {
+        if (value == null) return null
+        val type: Type = object : TypeToken<HydrationData>() {}.type
+        return gson.fromJson(value, type) ?: HydrationData()
     }
 }
