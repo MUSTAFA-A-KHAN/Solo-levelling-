@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.updateTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -169,13 +168,10 @@ fun CommandCenterScreen(
                 contentColor = MaterialTheme.colorScheme.primary,
                 indicator = { tabPositions ->
                     if (tabPositions.isNotEmpty()) {
-                        val transition = updateTransition(selectedTab, label = "tab_indicator")
-                        val start by transition.animateDp(label = "indicator_start") { tabPositions[it].left }
-                        val end by transition.animateDp(label = "indicator_end") { tabPositions[it].right }
+                        val current = tabPositions[selectedTab]
                         Box(
                             Modifier
-                                .offset(x = start)
-                                .width(end - start)
+                                .tabIndicatorOffset(current)
                                 .height(3.dp)
                                 .background(
                                     Brush.horizontalGradient(
