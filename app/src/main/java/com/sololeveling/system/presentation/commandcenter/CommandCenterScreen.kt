@@ -5,14 +5,11 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.updateTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,16 +18,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -150,8 +152,11 @@ fun CommandCenterScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-            val scrollState = rememberScrollState()
-            val headerCollapsed by derivedStateOf { scrollState.value > 8 }
+            val tabs = listOf("STATUS", "SYSTEM", "ARMY")
+            val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
+            val scope = rememberCoroutineScope()
+            val pageScrollStates = remember { List(tabs.size) { ScrollState(0) } }
+            val headerCollapsed by derivedStateOf { pageScrollStates[pagerState.currentPage].value > 8 }
 
             AnimatedVisibility(
                 visible = !headerCollapsed,
@@ -172,22 +177,23 @@ fun CommandCenterScreen(
             DashboardActions(activeQuests.size, onNavigateToQuests, onNavigateToLeaderboard, onSync = { viewModel.syncHealthData() })
             Spacer(modifier = Modifier.height(16.dp))
 
-            var selectedTab by remember { mutableStateOf(0) }
-            val tabs = listOf("STATUS", "SYSTEM", "ARMY")
-            LaunchedEffect(selectedTab) { scrollState.scrollTo(0) }
+            val selectedTab by derivedStateOf { pagerState.currentPage }
+
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.primary,
                 indicator = { tabPositions ->
                     if (tabPositions.isNotEmpty()) {
-                        val transition = updateTransition(selectedTab, label = "tab_indicator")
-                        val start by transition.animateDp(label = "indicator_start") { tabPositions[it].left }
-                        val end by transition.animateDp(label = "indicator_end") { tabPositions[it].right }
+                        val current = pagerState.currentPage
+                        val offset = pagerState.currentPageOffsetFraction
+                        val next = minOf(current + 1, tabPositions.lastIndex)
+                        val left = lerp(tabPositions[current].left, tabPositions[next].left, offset)
+                        val right = lerp(tabPositions[current].right, tabPositions[next].right, offset)
                         Box(
                             Modifier
-                                .offset(x = start)
-                                .width(end - start)
+                                .offset(x = left)
+                                .width(right - left)
                                 .height(3.dp)
                                 .background(
                                     Brush.horizontalGradient(
@@ -203,7 +209,7 @@ fun CommandCenterScreen(
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTab == index,
-                        onClick = { selectedTab = index },
+                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
                         text = {
                             val textColor by animateColorAsState(
                                 targetValue = if (selectedTab == index) MaterialTheme.colorScheme.primary else Color.Gray,
@@ -223,23 +229,18 @@ fun CommandCenterScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            AnimatedContent(
-                targetState = selectedTab,
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
-                        fadeOut(animationSpec = tween(90))
-                },
-                label = "tab_content"
-            ) { tab ->
+                    .weight(1f)
+            ) { page ->
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(scrollState)
+                        .verticalScroll(pageScrollStates[page])
                 ) {
-                    when (tab) {
+                    when (page) {
                         0 -> {
                             HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
                             Spacer(modifier = Modifier.height(24.dp))
