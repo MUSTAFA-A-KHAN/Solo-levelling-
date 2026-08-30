@@ -5,6 +5,11 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -141,12 +146,23 @@ fun CommandCenterScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(text = "SYSTEM ONLINE", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
-            ConnectionStatusIndicator(status = connectionStatus, onDismissError = { viewModel.clearConnectionError() })
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "COMMAND CENTER", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 4.sp)
-            Spacer(modifier = Modifier.height(24.dp))
+            val scrollState = rememberScrollState()
+            val headerCollapsed by derivedStateOf { scrollState.value > 8 }
+
+            AnimatedVisibility(
+                visible = !headerCollapsed,
+                enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
+                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(text = "SYSTEM ONLINE", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
+                    ConnectionStatusIndicator(status = connectionStatus, onDismissError = { viewModel.clearConnectionError() })
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "COMMAND CENTER", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 4.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             player?.let { p -> PlayerStatusCard(p, onClick = onNavigateToProfile) }
             Spacer(modifier = Modifier.height(16.dp))
             DashboardActions(activeQuests.size, onNavigateToQuests, onNavigateToLeaderboard, onSync = { viewModel.syncHealthData() })
@@ -154,6 +170,7 @@ fun CommandCenterScreen(
 
             var selectedTab by remember { mutableStateOf(0) }
             val tabs = listOf("STATUS", "SYSTEM", "ARMY")
+            LaunchedEffect(selectedTab) { scrollState.scrollTo(0) }
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
@@ -174,7 +191,7 @@ fun CommandCenterScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
             ) {
                 when (selectedTab) {
                     0 -> {
