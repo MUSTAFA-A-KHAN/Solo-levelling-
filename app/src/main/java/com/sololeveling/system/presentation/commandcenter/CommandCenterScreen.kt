@@ -5,11 +5,6 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -18,8 +13,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -28,12 +23,10 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -46,7 +39,6 @@ import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.R
@@ -156,23 +148,13 @@ fun CommandCenterScreen(
                 .padding(horizontal = 16.dp)
         ) {
             val tabs = listOf("STATUS", "SYSTEM", "ARMY")
-            val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
-            val scope = rememberCoroutineScope()
-            val pageScrollStates = remember { List(tabs.size) { ScrollState(0) } }
-            val headerCollapsed by derivedStateOf { pageScrollStates[pagerState.currentPage].value > 8 }
+            var selectedTab by remember { mutableStateOf(0) }
 
-            AnimatedVisibility(
-                visible = !headerCollapsed,
-                enter = expandVertically(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
-                exit = shrinkVertically(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200))
-            ) {
-                Column {
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Text(text = "SYSTEM ONLINE", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
-                    ConnectionStatusIndicator(status = connectionStatus, onDismissError = { viewModel.clearConnectionError() })
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "COMMAND CENTER", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 4.sp)
-                }
+            Column {
+                Text(text = "SYSTEM ONLINE", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
+                ConnectionStatusIndicator(status = connectionStatus, onDismissError = { viewModel.clearConnectionError() })
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "COMMAND CENTER", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 4.sp)
             }
             Spacer(modifier = Modifier.height(16.dp))
             player?.let { p -> PlayerStatusCard(p, onClick = onNavigateToProfile) }
@@ -180,23 +162,19 @@ fun CommandCenterScreen(
             DashboardActions(activeQuests.size, onNavigateToQuests, onNavigateToLeaderboard, onSync = { viewModel.syncHealthData() })
             Spacer(modifier = Modifier.height(16.dp))
 
-            val selectedTab by derivedStateOf { pagerState.currentPage }
-
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.primary,
                 indicator = { tabPositions ->
                     if (tabPositions.isNotEmpty()) {
-                        val current = pagerState.currentPage
-                        val offset = pagerState.currentPageOffsetFraction
-                        val next = minOf(current + 1, tabPositions.lastIndex)
-                        val left = lerp(tabPositions[current].left, tabPositions[next].left, offset)
-                        val right = lerp(tabPositions[current].right, tabPositions[next].right, offset)
+                        val transition = updateTransition(selectedTab, label = "tab_indicator")
+                        val start by transition.animateDp(label = "indicator_start") { tabPositions[it].left }
+                        val end by transition.animateDp(label = "indicator_end") { tabPositions[it].right }
                         Box(
                             Modifier
-                                .offset(x = left)
-                                .width(right - left)
+                                .offset(x = start)
+                                .width(end - start)
                                 .height(3.dp)
                                 .background(
                                     Brush.horizontalGradient(
@@ -212,7 +190,7 @@ fun CommandCenterScreen(
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTab == index,
-                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                        onClick = { selectedTab = index },
                         text = {
                             val textColor by animateColorAsState(
                                 targetValue = if (selectedTab == index) MaterialTheme.colorScheme.primary else Color.Gray,
@@ -232,21 +210,12 @@ fun CommandCenterScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) { page ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(pageScrollStates[page])
-                ) {
-                    when (page) {
-                        0 -> {
-                            HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
-                            Spacer(modifier = Modifier.height(24.dp))
+            when (selectedTab) {
+                0 -> CardPager(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    pages = listOf(
+                        { HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L) },
+                        {
                             player?.let { p ->
                                 HydrationPanel(
                                     current = p.hydrationData.currentIntakeLiters,
@@ -264,57 +233,42 @@ fun CommandCenterScreen(
                                     onSetInterval = { viewModel.setHydrationReminderInterval(it) },
                                     onReset = { viewModel.resetHydration() }
                                 )
-                                Spacer(modifier = Modifier.height(24.dp))
                             }
                         }
-                        1 -> {
-                            // Test Notification Button
+                    )
+                )
+                1 -> CardPager(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    pages = listOf(
+                        {
                             SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
-                                    Text(
-                                        text = "SYSTEM DIAGNOSTICS",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = SystemNeonPurple,
-                                        letterSpacing = 2.sp
-                                    )
+                                    Text(text = "SYSTEM DIAGNOSTICS", style = MaterialTheme.typography.labelLarge, color = SystemNeonPurple, letterSpacing = 2.sp)
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Button(
                                         onClick = { viewModel.sendTestNotification() },
                                         modifier = Modifier.fillMaxWidth(),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = SystemNeonPurple.copy(alpha = 0.2f),
-                                            contentColor = SystemNeonPurple
-                                        ),
+                                        colors = ButtonDefaults.buttonColors(containerColor = SystemNeonPurple.copy(alpha = 0.2f), contentColor = SystemNeonPurple),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text(
-                                            text = "SEND TEST NOTIFICATION",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        Text(text = "SEND TEST NOTIFICATION", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                                     }
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "Tap to verify notification system is operational",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.5f)
-                                    )
+                                    Text(text = "Tap to verify notification system is operational", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
                                 }
                             }
-                            Spacer(modifier = Modifier.height(24.dp))
-                            AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
-                            Spacer(modifier = Modifier.height(24.dp))
-                            DailyQuestOverview(activeQuests)
-                            Spacer(modifier = Modifier.height(24.dp))
-                        }
-                        2 -> {
-                            ShadowArmyPanel()
-                            Spacer(modifier = Modifier.height(24.dp))
-                            QuotesPanel()
-                            Spacer(modifier = Modifier.height(24.dp))
-                        }
-                    }
-                }
+                        },
+                        { AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) }) },
+                        { DailyQuestOverview(activeQuests) }
+                    )
+                )
+                2 -> CardPager(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    pages = listOf(
+                        { ShadowArmyPanel() },
+                        { QuotesPanel() }
+                    )
+                )
             }
         }
     }
@@ -339,6 +293,55 @@ fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -
         }
         SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
             ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CardPager(
+    modifier: Modifier = Modifier,
+    pages: List<@Composable () -> Unit>
+) {
+    if (pages.isEmpty()) return
+    val pagerState = rememberPagerState(initialPage = 0) { pages.size }
+    Column(modifier = modifier.fillMaxSize()) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) { page ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                pages[page]()
+            }
+        }
+        if (pages.size > 1) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(pages.size) { index ->
+                    val selected = index == pagerState.currentPage
+                    Box(
+                        modifier = Modifier
+                            .size(if (selected) 10.dp else 8.dp)
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.5f),
+                                CircleShape
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+            }
         }
     }
 }
