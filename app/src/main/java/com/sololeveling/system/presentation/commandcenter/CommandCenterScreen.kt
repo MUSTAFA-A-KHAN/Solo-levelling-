@@ -194,7 +194,10 @@ fun CommandCenterScreen(
                 SystemPanel(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { onNavigateToQuests() }
+                        .clickable(
+                            onClickLabel = "View Quest Log",
+                            role = androidx.compose.ui.semantics.Role.Button
+                        ) { onNavigateToQuests() }
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -214,7 +217,10 @@ fun CommandCenterScreen(
                 SystemPanel(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { onNavigateToLeaderboard() },
+                        .clickable(
+                            onClickLabel = "View Leaderboard",
+                            role = androidx.compose.ui.semantics.Role.Button
+                        ) { onNavigateToLeaderboard() },
                     borderColor = SystemNeonPurple
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -235,7 +241,10 @@ fun CommandCenterScreen(
                 SystemPanel(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { viewModel.syncHealthData() },
+                        .clickable(
+                            onClickLabel = "Sync Health Connect Data",
+                            role = androidx.compose.ui.semantics.Role.Button
+                        ) { viewModel.syncHealthData() },
                     borderColor = MaterialTheme.colorScheme.secondary
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -360,7 +369,10 @@ fun ConnectionStatusIndicator(
                 text = "SYNC ERROR: $errorMessage",
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                 color = StatusError,
-                modifier = Modifier.clickable { onDismissError() }
+                modifier = Modifier.clickable(
+                    onClickLabel = "Dismiss Error",
+                    role = androidx.compose.ui.semantics.Role.Button
+                ) { onDismissError() }
             )
         } else {
             Spacer(modifier = Modifier.width(8.dp))
@@ -375,7 +387,10 @@ fun ConnectionStatusIndicator(
 
 @Composable
 fun PlayerSummaryPanel(player: Player, onClick: () -> Unit = {}) {
-    SystemPanel(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+    SystemPanel(modifier = Modifier.fillMaxWidth().clickable(
+        onClickLabel = "View Player Profile",
+        role = androidx.compose.ui.semantics.Role.Button
+    ) { onClick() }) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically

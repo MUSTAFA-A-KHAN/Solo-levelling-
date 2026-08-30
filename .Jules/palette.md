@@ -8,3 +8,6 @@
 ## 2025-02-18 - Compose Custom Buttons Accessibility
 **Learning:** Custom buttons built using generic containers like `Box` or `Row` with simple `.clickable` modifiers are announced as generic unlabelled clickables by TalkBack.
 **Action:** Always provide explicit semantic labels and roles directly in the modifier (e.g., `.clickable(onClick = ..., onClickLabel = "Action description", role = Role.Button)`) to ensure screen readers correctly announce these generic containers as interactive buttons and describe their functionality.
+## 2026-08-30 - Compose Custom Buttons Accessibility
+**Learning:** Custom buttons built using generic containers like `Box` or `Row` with simple `.clickable` modifiers are announced as generic unlabelled clickables by TalkBack.
+**Action:** Always provide explicit semantic labels and roles directly in the modifier (e.g., `.clickable(onClickLabel = "Action description", role = Role.Button) { ... }`) to ensure screen readers correctly announce these generic containers as interactive buttons and describe their functionality.

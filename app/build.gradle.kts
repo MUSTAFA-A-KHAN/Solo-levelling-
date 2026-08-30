@@ -144,7 +144,7 @@ tasks.register<Exec>("buildGoCore") {
     workingDir = file("../core-go")
 
     val gopath = System.getenv("GOPATH") ?: "${System.getProperty("user.home")}/go"
-    environment("PATH", "${System.getenv("PATH")}:$gopath/bin")
+    environment("PATH", "${System.getenv("PATH")}:$gopath/bin:/usr/local/go/bin")
 
     // Using environment variables or defaults that work for GitHub Actions & local
     val androidHome = System.getenv("ANDROID_HOME") ?: "${System.getProperty("user.home")}/Android/Sdk"
@@ -161,8 +161,11 @@ tasks.register<Exec>("buildGoCore") {
         file("../app/libs").mkdirs()
     }
 
+    val executable = if (System.getProperty("os.name").lowercase().contains("windows")) "gomobile.exe" else "gomobile"
+    val gomobilePath = "$gopath/bin/$executable"
+
     commandLine(
-        "gomobile", "bind",
+        gomobilePath, "bind",
         "-target=android",
         "-androidapi=26",
         "-o", "../app/libs/corego.aar",

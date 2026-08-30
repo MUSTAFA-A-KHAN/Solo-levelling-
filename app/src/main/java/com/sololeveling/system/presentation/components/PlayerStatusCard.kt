@@ -57,7 +57,10 @@ fun PlayerStatusCard(
                     )
                 )
             )
-            .clickable { onClick() }
+            .clickable(
+                onClickLabel = "View Player Profile",
+                role = androidx.compose.ui.semantics.Role.Button
+            ) { onClick() }
             .drawBehind {
 
                 // Outer cyan HUD border
