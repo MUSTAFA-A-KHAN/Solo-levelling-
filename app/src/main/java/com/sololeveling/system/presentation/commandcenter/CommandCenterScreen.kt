@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
 import com.sololeveling.system.R
