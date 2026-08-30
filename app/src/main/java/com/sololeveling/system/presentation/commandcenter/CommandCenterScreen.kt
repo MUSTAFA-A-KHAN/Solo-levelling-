@@ -140,7 +140,6 @@ fun CommandCenterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(32.dp))
             Text(text = "SYSTEM ONLINE", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
@@ -151,70 +150,104 @@ fun CommandCenterScreen(
             player?.let { p -> PlayerStatusCard(p, onClick = onNavigateToProfile) }
             Spacer(modifier = Modifier.height(16.dp))
             DashboardActions(activeQuests.size, onNavigateToQuests, onNavigateToLeaderboard, onSync = { viewModel.syncHealthData() })
-            Spacer(modifier = Modifier.height(24.dp))
-            HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
-            Spacer(modifier = Modifier.height(24.dp))
-            player?.let { p ->
-                HydrationPanel(
-                    current = p.hydrationData.currentIntakeLiters,
-                    goal = p.hydrationData.dailyGoalLiters,
-                    reminderEnabled = p.hydrationData.reminderEnabled,
-                    reminderInterval = p.hydrationData.reminderIntervalMinutes,
-                    onAddWater = { viewModel.addHydration(it) },
-                    onToggleReminder = { enabled ->
-                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            viewModel.toggleHydrationReminders(enabled)
-                        }
-                    },
-                    onSetInterval = { viewModel.setHydrationReminderInterval(it) },
-                    onReset = { viewModel.resetHydration() }
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-            // Test Notification Button
-            SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "SYSTEM DIAGNOSTICS",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = SystemNeonPurple,
-                        letterSpacing = 2.sp
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { viewModel.sendTestNotification() },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SystemNeonPurple.copy(alpha = 0.2f),
-                            contentColor = SystemNeonPurple
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "SEND TEST NOTIFICATION",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tap to verify notification system is operational",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.5f)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            var selectedTab by remember { mutableStateOf(0) }
+            val tabs = listOf("STATUS", "SYSTEM", "ARMY")
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary,
+                divider = {}
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(title, style = MaterialTheme.typography.labelMedium) }
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
-            Spacer(modifier = Modifier.height(24.dp))
-            DailyQuestOverview(activeQuests)
-            Spacer(modifier = Modifier.height(24.dp))
-            ShadowArmyPanel()
-            Spacer(modifier = Modifier.height(32.dp))
-            QuotesPanel()
-            Spacer(modifier = Modifier.height(32.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                when (selectedTab) {
+                    0 -> {
+                        HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        player?.let { p ->
+                            HydrationPanel(
+                                current = p.hydrationData.currentIntakeLiters,
+                                goal = p.hydrationData.dailyGoalLiters,
+                                reminderEnabled = p.hydrationData.reminderEnabled,
+                                reminderInterval = p.hydrationData.reminderIntervalMinutes,
+                                onAddWater = { viewModel.addHydration(it) },
+                                onToggleReminder = { enabled ->
+                                    if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        viewModel.toggleHydrationReminders(enabled)
+                                    }
+                                },
+                                onSetInterval = { viewModel.setHydrationReminderInterval(it) },
+                                onReset = { viewModel.resetHydration() }
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+                    }
+                    1 -> {
+                        // Test Notification Button
+                        SystemPanel(modifier = Modifier.fillMaxWidth(), borderColor = SystemNeonPurple) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = "SYSTEM DIAGNOSTICS",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = SystemNeonPurple,
+                                    letterSpacing = 2.sp
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Button(
+                                    onClick = { viewModel.sendTestNotification() },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = SystemNeonPurple.copy(alpha = 0.2f),
+                                        contentColor = SystemNeonPurple
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = "SEND TEST NOTIFICATION",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Tap to verify notification system is operational",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                        AITerminalPanel(response = aiResponse, onSendCommand = { viewModel.sendAICommand(it) })
+                        Spacer(modifier = Modifier.height(24.dp))
+                        DailyQuestOverview(activeQuests)
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                    2 -> {
+                        ShadowArmyPanel()
+                        Spacer(modifier = Modifier.height(24.dp))
+                        QuotesPanel()
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
+            }
         }
     }
 
