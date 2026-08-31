@@ -28,6 +28,7 @@ import com.sololeveling.system.domain.model.HealthSnapshot
 import com.sololeveling.system.domain.usecase.QuestSyncUseCase
 import com.sololeveling.system.data.notifications.SystemNotificationManager
 import com.sololeveling.system.data.notifications.HydrationReminderWorker
+import com.sololeveling.system.data.local.SystemPreferences
 import com.sololeveling.system.domain.model.HydrationLog
 import com.sololeveling.system.domain.usecase.SystemAIUseCase
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -58,6 +59,7 @@ class CommandCenterViewModel @Inject constructor(
     private val leaderboardRepository: LeaderboardRepository,
     private val notificationManager: SystemNotificationManager,
     private val systemAI: SystemAIUseCase,
+    private val systemPreferences: SystemPreferences,
     val healthConnectManager: HealthConnectManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -87,6 +89,7 @@ class CommandCenterViewModel @Inject constructor(
     val aiResponse: StateFlow<String> = _aiResponse.asStateFlow()
 
     private var hasSynced = false
+    private var hydrationScheduleInitialized = false
 
     init {
         viewModelScope.launch {
@@ -98,13 +101,15 @@ class CommandCenterViewModel @Inject constructor(
             playerRepository.getPlayer().collectLatest { player ->
                 _playerState.value = player
                 _isLoading.value = false
-                if (player != null && player.hydrationData.currentIntakeLiters < 0.5) {
-                   // Initial reminder
-                   systemAI.triggerDailyEncouragement(player)
-                }
-                // Reschedule hydration reminders if enabled
-                if (player != null && player.hydrationData.reminderEnabled) {
-                    updateHydrationWork(true, player.hydrationData.reminderIntervalMinutes)
+                // Only configure hydration reminders once on initial load. Doing this on
+                // every emission would reset the periodic work's timer (UPDATE policy) and
+                // prevent the reminder from ever firing on schedule.
+                if (!hydrationScheduleInitialized && player != null) {
+                    hydrationScheduleInitialized = true
+                    if (player.hydrationData.reminderEnabled) {
+                        updateHydrationWork(true, player.hydrationData.reminderIntervalMinutes)
+                    }
+                    maybeShowDailyEncouragement(player)
                 }
             }
         }
@@ -234,6 +239,19 @@ class CommandCenterViewModel @Inject constructor(
         } else {
             workManager.cancelUniqueWork(HydrationReminderWorker.WORK_NAME)
         }
+    }
+
+    /**
+     * Shows the once-per-day hydration encouragement, but only if it has not already been
+     * shown today and the player is still under-hydrated. This prevents a notification from
+     * firing on every app open or health sync.
+     */
+    private suspend fun maybeShowDailyEncouragement(player: Player) {
+        if (player.hydrationData.currentIntakeLiters >= 0.5) return
+        val today = LocalDate.now().toString()
+        if (systemPreferences.lastHydrationEncouragementDate.firstOrNull() == today) return
+        systemAI.triggerDailyEncouragement(player)
+        systemPreferences.setLastHydrationEncouragementDate(today)
     }
 
     /**
