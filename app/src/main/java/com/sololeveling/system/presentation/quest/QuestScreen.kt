@@ -1,20 +1,23 @@
 package com.sololeveling.system.presentation.quest
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
-import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,7 +67,28 @@ fun QuestScreen(
                     .padding(padding)
                     .padding(horizontal = 16.dp)
             ) {
-                // Futuristic segmented control
+                // Animated futuristic segmented control
+                val activeBgColor by animateColorAsState(
+                    targetValue = if (!showCompleted) SystemNeonBlue.copy(alpha = 0.2f) else Color.Transparent,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "activeTabBg"
+                )
+                val activeTextColor by animateColorAsState(
+                    targetValue = if (!showCompleted) SystemNeonBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "activeTabText"
+                )
+                val completedBgColor by animateColorAsState(
+                    targetValue = if (showCompleted) SystemNeonPurple.copy(alpha = 0.2f) else Color.Transparent,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "completedTabBg"
+                )
+                val completedTextColor by animateColorAsState(
+                    targetValue = if (showCompleted) SystemNeonPurple else MaterialTheme.colorScheme.onSurfaceVariant,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "completedTabText"
+                )
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -77,30 +101,40 @@ fun QuestScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (!showCompleted) SystemNeonBlue.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0f))
-                            .clickable(onClickLabel = "Show Active Quests", role = Role.Tab) { showCompleted = false }
+                            .background(activeBgColor)
+                            .selectable(
+                                selected = !showCompleted,
+                                role = Role.Tab,
+                                onClick = { showCompleted = false }
+                            )
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "ACTIVE (${activeQuests.size})",
-                            color = if (!showCompleted) SystemNeonBlue else MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.titleSmall
+                            color = activeTextColor,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = if (!showCompleted) FontWeight.Bold else FontWeight.Normal
                         )
                     }
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (showCompleted) SystemNeonPurple.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0f))
-                            .clickable(onClickLabel = "Show Completed Quests", role = Role.Tab) { showCompleted = true }
+                            .background(completedBgColor)
+                            .selectable(
+                                selected = showCompleted,
+                                role = Role.Tab,
+                                onClick = { showCompleted = true }
+                            )
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "COMPLETED (${completedQuests.size})",
-                            color = if (showCompleted) SystemNeonPurple else MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.titleSmall
+                            color = completedTextColor,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = if (showCompleted) FontWeight.Bold else FontWeight.Normal
                         )
                     }
                 }
