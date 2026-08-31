@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -34,15 +35,6 @@ fun PlayerStatusCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
-    val rankColor = when (player.rank) {
-        Rank.S -> RankSColor
-        Rank.A -> RankAColor
-        Rank.B -> RankBColor
-        Rank.C -> RankCColor
-        Rank.D -> RankDColor
-        Rank.E -> RankEColor
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -57,7 +49,11 @@ fun PlayerStatusCard(
                     )
                 )
             )
-            .clickable { onClick() }
+            .clickable(
+                onClick = onClick,
+                onClickLabel = "View player profile",
+                role = Role.Button
+            )
             .drawBehind {
 
                 // Outer cyan HUD border
