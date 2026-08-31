@@ -23,6 +23,7 @@ class SystemPreferences @Inject constructor(
         private val LAST_DAILY_QUEST_DATE = stringPreferencesKey("last_daily_quest_date")
         private val LAST_WEEKLY_QUEST_DATE = stringPreferencesKey("last_weekly_quest_date")
         private val WELCOME_SHOWN = booleanPreferencesKey("welcome_shown")
+        private val LAST_HYDRATION_ENCOURAGEMENT_DATE = stringPreferencesKey("last_hydration_encouragement_date")
     }
 
     val lastDailyQuestDate: Flow<String?> = context.dataStore.data
@@ -40,6 +41,11 @@ class SystemPreferences @Inject constructor(
             preferences[WELCOME_SHOWN] ?: false
         }
 
+    val lastHydrationEncouragementDate: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[LAST_HYDRATION_ENCOURAGEMENT_DATE]
+        }
+
     suspend fun setLastDailyQuestDate(date: String) {
         context.dataStore.edit { preferences ->
             preferences[LAST_DAILY_QUEST_DATE] = date
@@ -55,6 +61,12 @@ class SystemPreferences @Inject constructor(
     suspend fun setWelcomeShown(shown: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[WELCOME_SHOWN] = shown
+        }
+    }
+
+    suspend fun setLastHydrationEncouragementDate(date: String) {
+        context.dataStore.edit { preferences ->
+            preferences[LAST_HYDRATION_ENCOURAGEMENT_DATE] = date
         }
     }
 }
