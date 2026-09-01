@@ -129,7 +129,7 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(onClickLabel = "Link Account", role = androidx.compose.ui.semantics.Role.Button) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -258,7 +258,7 @@ fun LeaderboardItem(
 
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(if (onClick != null) Modifier.clickable(onClickLabel = "View Profile", role = androidx.compose.ui.semantics.Role.Button, onClick = { onClick() }) else Modifier)
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
