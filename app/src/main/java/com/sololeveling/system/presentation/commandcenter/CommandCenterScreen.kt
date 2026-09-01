@@ -5,8 +5,11 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,8 +33,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -283,15 +288,67 @@ fun CommandCenterScreen(
 @Composable
 fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -> Unit, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onQuests() }) {
-            ActionItem("QUEST LOG", "$activeCount ACTIVE", MaterialTheme.colorScheme.primary)
-        }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onLeaderboard() }, borderColor = SystemNeonPurple) {
-            ActionItem("LEADERBOARD", "RANKINGS", SystemNeonPurple)
-        }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
-            ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
-        }
+        DashboardActionButton(
+            title = "QUEST LOG",
+            subtitle = "$activeCount ACTIVE",
+            color = MaterialTheme.colorScheme.primary,
+            onClickLabel = "Open quest log",
+            onClick = onQuests,
+            modifier = Modifier.weight(1f)
+        )
+        DashboardActionButton(
+            title = "LEADERBOARD",
+            subtitle = "RANKINGS",
+            color = SystemNeonPurple,
+            onClickLabel = "Open leaderboard",
+            onClick = onLeaderboard,
+            modifier = Modifier.weight(1f)
+        )
+        DashboardActionButton(
+            title = "SYNC DATA",
+            subtitle = "HEALTH",
+            color = MaterialTheme.colorScheme.secondary,
+            onClickLabel = "Sync health data",
+            onClick = onSync,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+fun DashboardActionButton(
+    title: String,
+    subtitle: String,
+    color: Color,
+    onClickLabel: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 100),
+        label = "action_button_scale"
+    )
+
+    SystemPanel(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Button,
+                onClickLabel = onClickLabel,
+                onClick = onClick
+            ),
+        borderColor = color
+    ) {
+        ActionItem(title, subtitle, color)
     }
 }
 
