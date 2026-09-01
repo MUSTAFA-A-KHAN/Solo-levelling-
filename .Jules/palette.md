@@ -12,3 +12,6 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+## 2025-03-02 - Compose Generic Clickable Modifiers Accessibility
+**Learning:** Adding `.clickable { ... }` to a generic Compose container like `Box`, `Row`, or custom `SystemPanel` does not inherently inform the screen reader that the element is a button, or what the button does. TalkBack just reads the inner text and says "double tap to activate".
+**Action:** When making custom components clickable, always use the overload `.clickable(onClickLabel = "Describe action", role = Role.Button) { ... }` to ensure screen readers announce it as a button with a clear purpose.

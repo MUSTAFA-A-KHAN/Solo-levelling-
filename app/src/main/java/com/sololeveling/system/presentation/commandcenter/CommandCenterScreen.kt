@@ -283,13 +283,13 @@ fun CommandCenterScreen(
 @Composable
 fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -> Unit, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onQuests() }) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable(onClickLabel = "View Quest Log", role = androidx.compose.ui.semantics.Role.Button) { onQuests() }) {
             ActionItem("QUEST LOG", "$activeCount ACTIVE", MaterialTheme.colorScheme.primary)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onLeaderboard() }, borderColor = SystemNeonPurple) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable(onClickLabel = "View Leaderboard", role = androidx.compose.ui.semantics.Role.Button) { onLeaderboard() }, borderColor = SystemNeonPurple) {
             ActionItem("LEADERBOARD", "RANKINGS", SystemNeonPurple)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable(onClickLabel = "Sync Health Data", role = androidx.compose.ui.semantics.Role.Button) { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
             ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
         }
     }
@@ -499,7 +499,7 @@ fun ConnectionStatusIndicator(status: CommandCenterViewModel.ConnectionStatus, o
         Box(modifier = Modifier.size(if (dotPulse) 12.dp else 10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(animatedDotColor))
         Spacer(modifier = Modifier.width(8.dp))
         if (shouldShowError && errorMessage != null) {
-            Text(text = "SYNC ERROR: $errorMessage", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = StatusError, modifier = Modifier.clickable { onDismissError() })
+            Text(text = "SYNC ERROR: $errorMessage", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = StatusError, modifier = Modifier.clickable(onClickLabel = "Dismiss Sync Error", role = androidx.compose.ui.semantics.Role.Button) { onDismissError() })
         } else {
             Text(text = "CLOUD CONNECTED", style = MaterialTheme.typography.labelMedium, color = if (dotPulse) StatusWarning else StatusSuccess)
         }
