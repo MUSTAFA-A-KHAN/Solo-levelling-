@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,7 +58,11 @@ fun PlayerStatusCard(
                     )
                 )
             )
-            .clickable { onClick() }
+            .clickable(
+                onClickLabel = "View player profile",
+                role = Role.Button,
+                onClick = onClick
+            )
             .drawBehind {
 
                 // Outer cyan HUD border
@@ -152,7 +157,7 @@ fun PlayerStatusCard(
         // Character artwork
         Image(
             painter = painterResource(R.drawable.img_jinwoo),
-            contentDescription = null,
+            contentDescription = "Player character artwork",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxHeight()
