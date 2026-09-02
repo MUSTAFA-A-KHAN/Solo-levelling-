@@ -12,3 +12,7 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+
+## 2025-03-03 - Interactive Dashboard Panel Press Feedback & Semantics
+**Learning:** Custom interactive panel cards on main app dashboards require combining press scale animations (`animateFloatAsState` with `MutableInteractionSource`) and explicit Compose button semantics (`role = Role.Button` and `onClickLabel`) to ensure responsive tactile feedback and screen reader clarity.
+**Action:** Wrap clickable custom dashboard panel containers in a wrapper using `collectIsPressedAsState()` for scale feedback and `.clickable(role = Role.Button, onClickLabel = ...)` so users receive both visual touch feedback and TalkBack action descriptions.
