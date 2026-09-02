@@ -5,8 +5,14 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -281,15 +287,64 @@ fun CommandCenterScreen(
 }
 
 @Composable
+private fun DashboardActionButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    onClickLabel: String,
+    borderColor: Color = MaterialTheme.colorScheme.primary,
+    content: @Composable () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1.0f,
+        animationSpec = tween(durationMillis = 100),
+        label = "dashboard_action_scale"
+    )
+
+    SystemPanel(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = rememberRipple(),
+                onClickLabel = onClickLabel,
+                role = Role.Button,
+                onClick = onClick
+            ),
+        borderColor = borderColor
+    ) {
+        content()
+    }
+}
+
+@Composable
 fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -> Unit, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onQuests() }) {
+        DashboardActionButton(
+            modifier = Modifier.weight(1f),
+            onClick = onQuests,
+            onClickLabel = "Open Quest Log"
+        ) {
             ActionItem("QUEST LOG", "$activeCount ACTIVE", MaterialTheme.colorScheme.primary)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onLeaderboard() }, borderColor = SystemNeonPurple) {
+        DashboardActionButton(
+            modifier = Modifier.weight(1f),
+            onClick = onLeaderboard,
+            onClickLabel = "View Leaderboard",
+            borderColor = SystemNeonPurple
+        ) {
             ActionItem("LEADERBOARD", "RANKINGS", SystemNeonPurple)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
+        DashboardActionButton(
+            modifier = Modifier.weight(1f),
+            onClick = onSync,
+            onClickLabel = "Synchronize Health Data",
+            borderColor = MaterialTheme.colorScheme.secondary
+        ) {
             ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
         }
     }
