@@ -12,3 +12,6 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+## 2024-11-20 - Explicit Accessibility Modifiers in Custom Components
+**Learning:** When using generic containers like `Box` or `Row` as interactive elements (e.g., custom cards or buttons) in Jetpack Compose, simply adding `Modifier.clickable {}` is insufficient for TalkBack. Without explicit roles, TalkBack struggles to communicate the element's purpose.
+**Action:** Always include `.clickable(onClickLabel = "...", role = Role.Button, onClick = ...)` on generic containers meant to be interacted with to ensure screen readers correctly announce their roles and labels. Additionally, ensure `Image` components provide meaningful `contentDescription` properties instead of `null` if they are visually important (e.g., character artwork in a profile card).
