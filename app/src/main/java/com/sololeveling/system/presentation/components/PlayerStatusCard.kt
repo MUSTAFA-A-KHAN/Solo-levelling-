@@ -57,7 +57,10 @@ fun PlayerStatusCard(
                     )
                 )
             )
-            .clickable { onClick() }
+            .clickable(
+                onClickLabel = "View player profile",
+                role = androidx.compose.ui.semantics.Role.Button
+            ) { onClick() }
             .drawBehind {
 
                 // Outer cyan HUD border
@@ -152,7 +155,7 @@ fun PlayerStatusCard(
         // Character artwork
         Image(
             painter = painterResource(R.drawable.img_jinwoo),
-            contentDescription = null,
+            contentDescription = "Player character artwork",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxHeight()
