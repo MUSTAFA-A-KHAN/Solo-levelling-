@@ -28,7 +28,7 @@ fun AnimatedFireEffect(
             .crossfade(false)
             .build(),
         imageLoader = imageLoader,
-        contentDescription = null,
+        contentDescription = "Animated fire effect",
         modifier = modifier.fillMaxSize()
     )
 }

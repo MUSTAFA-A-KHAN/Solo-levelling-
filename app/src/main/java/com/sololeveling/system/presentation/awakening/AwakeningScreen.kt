@@ -45,7 +45,7 @@ fun AwakeningScreen(
     ) {
         Image(
             painter = painterResource(id = R.drawable.img_awakening),
-            contentDescription = null,
+            contentDescription = "Awakening background",
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .alpha(0.3f)
