@@ -5,12 +5,15 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
@@ -30,8 +33,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -283,15 +288,66 @@ fun CommandCenterScreen(
 @Composable
 fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -> Unit, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onQuests() }) {
-            ActionItem("QUEST LOG", "$activeCount ACTIVE", MaterialTheme.colorScheme.primary)
-        }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onLeaderboard() }, borderColor = SystemNeonPurple) {
-            ActionItem("LEADERBOARD", "RANKINGS", SystemNeonPurple)
-        }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
-            ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
-        }
+        DashboardActionCard(
+            title = "QUEST LOG",
+            subtitle = "$activeCount ACTIVE",
+            color = MaterialTheme.colorScheme.primary,
+            onClick = onQuests,
+            onClickLabel = "Open Quest Log",
+            modifier = Modifier.weight(1f)
+        )
+        DashboardActionCard(
+            title = "LEADERBOARD",
+            subtitle = "RANKINGS",
+            color = SystemNeonPurple,
+            onClick = onLeaderboard,
+            onClickLabel = "Open Leaderboard",
+            modifier = Modifier.weight(1f)
+        )
+        DashboardActionCard(
+            title = "SYNC DATA",
+            subtitle = "HEALTH",
+            color = MaterialTheme.colorScheme.secondary,
+            onClick = onSync,
+            onClickLabel = "Sync Health Data",
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun DashboardActionCard(
+    title: String,
+    subtitle: String,
+    color: Color,
+    onClick: () -> Unit,
+    onClickLabel: String,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 100),
+        label = "card_press_scale"
+    )
+
+    SystemPanel(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+                onClickLabel = onClickLabel,
+                role = Role.Button
+            ),
+        borderColor = color
+    ) {
+        ActionItem(title, subtitle, color)
     }
 }
 
