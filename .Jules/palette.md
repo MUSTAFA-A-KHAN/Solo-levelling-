@@ -12,3 +12,7 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+
+## 2025-03-05 - Animated Tab Content Transitions & Selectable Semantics
+**Learning:** `Modifier.selectable` in Jetpack Compose does not accept an `onClickLabel` parameter directly, so attaching `.semantics { onClick(label = "...", action = null) }` provides explicit action labels to TalkBack while `AnimatedContent` with `togetherWith` slide/fade specs avoids abrupt layout snaps when switching tabs.
+**Action:** Use `.semantics { onClick(label = "Action description", action = null) }` alongside `.selectable(...)` for custom tabs, and wrap tab content in `AnimatedContent` for smooth horizontal slide transitions.
