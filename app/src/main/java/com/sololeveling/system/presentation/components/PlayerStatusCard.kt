@@ -152,7 +152,7 @@ fun PlayerStatusCard(
         // Character artwork
         Image(
             painter = painterResource(R.drawable.img_jinwoo),
-            contentDescription = null,
+            contentDescription = "Player character artwork",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxHeight()
