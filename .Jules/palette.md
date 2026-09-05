@@ -12,3 +12,6 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+## 2026-09-05 - Compose Image Accessibility Decorator
+**Learning:** In Jetpack Compose, decorative background images should explicitly use `contentDescription = null` to be skipped by screen readers. Providing a description for them adds unnecessary noise for TalkBack users.
+**Action:** Only provide meaningful `contentDescription` strings for visually important images (like character artwork or actionable icons). Ensure decorative background images use `null`.
