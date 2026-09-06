@@ -1,5 +1,6 @@
 package com.sololeveling.system.presentation.quest
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -18,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -107,6 +110,7 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = false }
                             )
+                            .semantics { onClick(label = "Show active quests", action = null) }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -127,6 +131,7 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = true }
                             )
+                            .semantics { onClick(label = "Show completed quests", action = null) }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -141,22 +146,32 @@ fun QuestScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val displayList = if (showCompleted) completedQuests else activeQuests
+                Crossfade(
+                    targetState = showCompleted,
+                    animationSpec = tween(durationMillis = 250),
+                    label = "questListCrossfade"
+                ) { isCompletedTab ->
+                    val displayList = if (isCompletedTab) completedQuests else activeQuests
 
-                if (displayList.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
-                    }
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 32.dp)
-                    ) {
-                        items(displayList) { quest ->
-                            QuestItem(
-                                quest = quest,
-                                onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                    if (displayList.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = if (isCompletedTab) "NO COMPLETED QUESTS" else "NO QUESTS AVAILABLE",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.titleMedium
                             )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 32.dp)
+                        ) {
+                            items(displayList) { quest ->
+                                QuestItem(
+                                    quest = quest,
+                                    onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                                )
+                            }
                         }
                     }
                 }
