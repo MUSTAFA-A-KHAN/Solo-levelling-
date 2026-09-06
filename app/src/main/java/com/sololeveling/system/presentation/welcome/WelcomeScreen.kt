@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -153,7 +154,12 @@ private fun WelcomeActionButton(
         SystemPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = enabled, onClick = onClick),
+                .clickable(
+                    enabled = enabled,
+                    onClickLabel = "Execute action: $title",
+                    role = Role.Button,
+                    onClick = onClick
+                ),
             borderColor = borderColor
         ) {
             Column(

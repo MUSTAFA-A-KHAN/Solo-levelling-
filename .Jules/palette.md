@@ -12,3 +12,6 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+## 2025-03-02 - Modifier.clickable Semantic Roles
+**Learning:** Adding `onClickLabel` and `role = Role.Button` properties to `Modifier.clickable` usage throughout the codebase improves screen reader contextual understanding by providing context of what action occurs, especially for generic interactive elements.
+**Action:** Always provide explicit semantic labels and roles directly in the modifier (e.g., `.clickable(onClickLabel = "Action description", role = Role.Button, onClick = ...)`) to ensure screen readers correctly announce these generic containers as interactive buttons and describe their functionality.

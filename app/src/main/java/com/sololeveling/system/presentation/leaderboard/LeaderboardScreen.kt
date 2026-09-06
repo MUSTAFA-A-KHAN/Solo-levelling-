@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -129,7 +130,7 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(onClickLabel = "Link Account", role = Role.Button) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -258,7 +259,7 @@ fun LeaderboardItem(
 
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(if (onClick != null) Modifier.clickable(onClickLabel = "View hunter profile", role = Role.Button, onClick = { onClick() }) else Modifier)
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
