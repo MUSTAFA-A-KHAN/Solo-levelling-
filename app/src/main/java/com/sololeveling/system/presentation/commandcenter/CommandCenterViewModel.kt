@@ -35,6 +35,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.WeekFields
@@ -90,6 +91,9 @@ class CommandCenterViewModel @Inject constructor(
 
     private var hasSynced = false
     private var hydrationScheduleInitialized = false
+
+    data class PendingMissedSteps(val stepsCount: Long, val startTimeMillis: Long, val endTimeMillis: Long)
+    private var pendingMissedSteps: PendingMissedSteps? = null
 
     init {
         viewModelScope.launch {
@@ -397,6 +401,69 @@ class CommandCenterViewModel @Inject constructor(
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
+
+    fun logMissedSteps(stepsCount: Long, startTimeMillis: Long, endTimeMillis: Long) {
+        viewModelScope.launch {
+            if (!healthConnectManager.hasAllPermissions()) {
+                pendingMissedSteps = PendingMissedSteps(stepsCount, startTimeMillis, endTimeMillis)
+                _uiEvent.emit(UiEvent.RequestHealthPermissions(healthConnectManager.requiredPermissions))
+                return@launch
+            }
+            executeLogMissedSteps(stepsCount, startTimeMillis, endTimeMillis)
+        }
+    }
+
+    fun onHealthPermissionsResult() {
+        viewModelScope.launch {
+            val pending = pendingMissedSteps
+            pendingMissedSteps = null
+            if (pending != null && healthConnectManager.hasAllPermissions()) {
+                executeLogMissedSteps(pending.stepsCount, pending.startTimeMillis, pending.endTimeMillis)
+            } else {
+                syncHealthData()
+            }
+        }
+    }
+
+    private suspend fun executeLogMissedSteps(stepsCount: Long, startTimeMillis: Long, endTimeMillis: Long) {
+        try {
+            val startTime = Instant.ofEpochMilli(startTimeMillis)
+            val endTime = Instant.ofEpochMilli(endTimeMillis)
+
+            val insertedInHealthConnect = healthConnectManager.insertSteps(stepsCount, startTime, endTime)
+
+            val currentPlayer = _playerState.value
+            if (currentPlayer != null) {
+                val durationMinutes = ((endTimeMillis - startTimeMillis) / (1000 * 60)).coerceAtLeast(0)
+                val updatedPlayer = progressionEngine.processHealthData(
+                    player = currentPlayer,
+                    steps = stepsCount,
+                    workoutMinutes = durationMinutes,
+                    syncTime = endTimeMillis
+                )
+                playerRepository.updatePlayer(updatedPlayer)
+            }
+
+            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val snapshot = buildDailyHealthSnapshot(startOfDay)
+
+            _dailyHealthData.value = DailyHealthData(
+                steps = snapshot.steps,
+                workoutMinutes = snapshot.workoutMinutes,
+                caloriesBurned = healthConnectManager.getRecentCaloriesBurned(startOfDay),
+                sleepMinutes = snapshot.sleepMinutes
+            )
+
+            _weeklySteps.value = progressionEngine.getWeeklySteps()
+            questSyncUseCase.syncQuestsWithHealthData(snapshot)
+
+            val healthStatus = if (insertedInHealthConnect) "Health Connect & App synced." else "App progression updated."
+            _aiResponse.value = "System: Logged missed footsteps (+$stepsCount steps). $healthStatus"
+        } catch (e: Exception) {
+            android.util.Log.e("CommandCenterViewModel", "Failed to log missed steps", e)
+            _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Failed to log steps")
+        }
+    }
 
     fun syncHealthData() {
         viewModelScope.launch {
