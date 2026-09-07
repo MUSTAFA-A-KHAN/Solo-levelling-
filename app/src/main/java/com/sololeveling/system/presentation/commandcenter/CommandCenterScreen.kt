@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -283,13 +284,13 @@ fun CommandCenterScreen(
 @Composable
 fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -> Unit, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onQuests() }) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable(onClickLabel = "Open Quests", role = Role.Button) { onQuests() }) {
             ActionItem("QUEST LOG", "$activeCount ACTIVE", MaterialTheme.colorScheme.primary)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onLeaderboard() }, borderColor = SystemNeonPurple) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable(onClickLabel = "Open Leaderboard", role = Role.Button) { onLeaderboard() }, borderColor = SystemNeonPurple) {
             ActionItem("LEADERBOARD", "RANKINGS", SystemNeonPurple)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable(onClickLabel = "Sync Data", role = Role.Button) { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
             ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
         }
     }
