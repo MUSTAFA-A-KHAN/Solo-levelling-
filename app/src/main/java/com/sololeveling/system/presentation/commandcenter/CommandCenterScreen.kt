@@ -126,9 +126,7 @@ fun CommandCenterScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = PermissionController.createRequestPermissionResultContract()
     ) { granted ->
-        if (granted.containsAll(viewModel.healthConnectManager.requiredPermissions)) {
-            viewModel.syncHealthData()
-        }
+        viewModel.onHealthPermissionsResult()
     }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
