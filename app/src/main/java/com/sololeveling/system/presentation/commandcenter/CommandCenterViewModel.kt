@@ -35,6 +35,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.WeekFields
@@ -397,6 +398,52 @@ class CommandCenterViewModel @Inject constructor(
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
+
+    fun logMissedSteps(stepsCount: Long, startTimeMillis: Long, endTimeMillis: Long) {
+        viewModelScope.launch {
+            try {
+                if (!healthConnectManager.hasAllPermissions()) {
+                    _uiEvent.emit(UiEvent.RequestHealthPermissions(healthConnectManager.requiredPermissions))
+                    return@launch
+                }
+
+                val startTime = Instant.ofEpochMilli(startTimeMillis)
+                val endTime = Instant.ofEpochMilli(endTimeMillis)
+
+                healthConnectManager.insertSteps(stepsCount, startTime, endTime)
+
+                val currentPlayer = _playerState.value
+                if (currentPlayer != null) {
+                    val durationMinutes = ((endTimeMillis - startTimeMillis) / (1000 * 60)).coerceAtLeast(0)
+                    val updatedPlayer = progressionEngine.processHealthData(
+                        player = currentPlayer,
+                        steps = stepsCount,
+                        workoutMinutes = durationMinutes,
+                        syncTime = endTimeMillis
+                    )
+                    playerRepository.updatePlayer(updatedPlayer)
+                }
+
+                val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                val snapshot = buildDailyHealthSnapshot(startOfDay)
+
+                _dailyHealthData.value = DailyHealthData(
+                    steps = snapshot.steps,
+                    workoutMinutes = snapshot.workoutMinutes,
+                    caloriesBurned = healthConnectManager.getRecentCaloriesBurned(startOfDay),
+                    sleepMinutes = snapshot.sleepMinutes
+                )
+
+                _weeklySteps.value = progressionEngine.getWeeklySteps()
+                questSyncUseCase.syncQuestsWithHealthData(snapshot)
+
+                _aiResponse.value = "System: Logged missed footsteps ($stepsCount steps). Progression & quests updated."
+            } catch (e: Exception) {
+                android.util.Log.e("CommandCenterViewModel", "Failed to log missed steps", e)
+                _connectionStatus.value = ConnectionStatus.Failed(e.message ?: "Failed to log steps")
+            }
+        }
+    }
 
     fun syncHealthData() {
         viewModelScope.launch {

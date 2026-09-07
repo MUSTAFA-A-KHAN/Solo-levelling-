@@ -111,6 +111,18 @@ fun CommandCenterScreen(
     val connectionStatus by viewModel.connectionStatus.collectAsState()
     val aiResponse by viewModel.aiResponse.collectAsState()
 
+    var showLogWalkDialog by remember { mutableStateOf(false) }
+
+    if (showLogWalkDialog) {
+        LogMissedWalkDialog(
+            onDismiss = { showLogWalkDialog = false },
+            onConfirm = { steps, startTimeMs, endTimeMs ->
+                viewModel.logMissedSteps(steps, startTimeMs, endTimeMs)
+                showLogWalkDialog = false
+            }
+        )
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = PermissionController.createRequestPermissionResultContract()
     ) { granted ->
@@ -212,7 +224,7 @@ fun CommandCenterScreen(
                 0 -> CardPager(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     pages = listOf(
-                        { HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L) },
+                        { HealthOverviewPanel(dailyHealthData, weeklySteps, player?.footsteps ?: 0L, onLogMissedWalk = { showLogWalkDialog = true }) },
                         {
                             player?.let { p ->
                                 HydrationPanel(
@@ -520,7 +532,12 @@ fun SyncConflictDialog(remoteLevel: Int, onConfirm: () -> Unit, onDismiss: () ->
 }
 
 @Composable
-fun HealthOverviewPanel(data: DailyHealthData, weeklySteps: Long = 0L, totalSteps: Long = 0L) {
+fun HealthOverviewPanel(
+    data: DailyHealthData,
+    weeklySteps: Long = 0L,
+    totalSteps: Long = 0L,
+    onLogMissedWalk: () -> Unit = {}
+) {
     SystemPanel(modifier = Modifier.fillMaxWidth()) {
         Column {
             Text(text = "TODAY's OVERVIEW", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
@@ -539,8 +556,129 @@ fun HealthOverviewPanel(data: DailyHealthData, weeklySteps: Long = 0L, totalStep
                 HealthStatMetric(label = "WEEKLY STEPS", value = weeklySteps.toString(), color = StatusSuccess)
                 HealthStatMetric(label = "TOTAL STEPS", value = totalSteps.toString(), color = SystemNeonBlue)
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onLogMissedWalk,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = SystemNeonBlue.copy(alpha = 0.15f), contentColor = SystemNeonBlue),
+                shape = RoundedCornerShape(8.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SystemNeonBlue.copy(alpha = 0.5f))
+            ) {
+                Text(text = "LOG MISSED WALK", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            }
         }
     }
+}
+
+@Composable
+fun LogMissedWalkDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (steps: Long, startTimeMs: Long, endTimeMs: Long) -> Unit
+) {
+    var stepCountText by remember { mutableStateOf("3000") }
+    var durationText by remember { mutableStateOf("30") }
+    var hoursAgoText by remember { mutableStateOf("0") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF0D111A),
+        title = {
+            Text(
+                text = "LOG MISSED FOOTSTEPS",
+                style = MaterialTheme.typography.titleMedium,
+                color = SystemNeonBlue,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Record steps taken without your phone to update Health Connect & System progression.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+
+                OutlinedTextField(
+                    value = stepCountText,
+                    onValueChange = { stepCountText = it },
+                    label = { Text("Footsteps Count", color = SystemNeonBlue) },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SystemNeonBlue,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+
+                OutlinedTextField(
+                    value = durationText,
+                    onValueChange = { durationText = it },
+                    label = { Text("Walk Duration (minutes)", color = SystemNeonBlue) },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SystemNeonBlue,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+
+                OutlinedTextField(
+                    value = hoursAgoText,
+                    onValueChange = { hoursAgoText = it },
+                    label = { Text("Ended Hours Ago (e.g. 0)", color = SystemNeonBlue) },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SystemNeonBlue,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+
+                errorMessage?.let {
+                    Text(text = it, style = MaterialTheme.typography.labelSmall, color = StatusError)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val steps = stepCountText.toLongOrNull()
+                    val duration = durationText.toLongOrNull()
+                    val hoursAgo = hoursAgoText.toDoubleOrNull()
+                    if (steps == null || steps <= 0) {
+                        errorMessage = "Please enter a valid step count (> 0)."
+                        return@Button
+                    }
+                    if (duration == null || duration <= 0) {
+                        errorMessage = "Please enter a valid duration in minutes."
+                        return@Button
+                    }
+                    if (hoursAgo == null || hoursAgo < 0) {
+                        errorMessage = "Please enter a valid hours value (>= 0)."
+                        return@Button
+                    }
+
+                    val now = System.currentTimeMillis()
+                    val endTimeMs = now - (hoursAgo * 3600 * 1000).toLong()
+                    val startTimeMs = endTimeMs - (duration * 60 * 1000)
+
+                    onConfirm(steps, startTimeMs, endTimeMs)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = SystemNeonBlue, contentColor = Color.Black)
+            ) {
+                Text("RECORD", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CANCEL", color = Color.Gray)
+            }
+        }
+    )
 }
 
 @Composable

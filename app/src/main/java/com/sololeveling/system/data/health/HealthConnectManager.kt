@@ -11,6 +11,8 @@ import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 import javax.inject.Inject
 
 class HealthConnectManager @Inject constructor(
@@ -21,6 +23,7 @@ class HealthConnectManager @Inject constructor(
 
     val requiredPermissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
+        HealthPermission.getWritePermission(StepsRecord::class),
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class)
@@ -152,5 +155,28 @@ class HealthConnectManager @Inject constructor(
             ReadRecordsRequest(recordType = StepsRecord::class, timeRangeFilter = timeRange)
         )
         return response.records.sumOf { it.count }
+    }
+
+    suspend fun insertSteps(
+        count: Long,
+        startTime: Instant,
+        endTime: Instant,
+        zoneOffset: ZoneOffset = ZoneId.systemDefault().rules.getOffset(startTime)
+    ): Boolean {
+        if (!hasAllPermissions()) return false
+        return try {
+            val record = StepsRecord(
+                count = count,
+                startTime = startTime,
+                startZoneOffset = zoneOffset,
+                endTime = endTime,
+                endZoneOffset = zoneOffset
+            )
+            healthConnectClient.insertRecords(listOf(record))
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("HealthConnectManager", "Failed to insert steps", e)
+            false
+        }
     }
 }
