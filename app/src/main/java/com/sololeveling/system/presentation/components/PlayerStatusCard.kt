@@ -1,16 +1,25 @@
 package com.sololeveling.system.presentation.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
@@ -34,19 +43,25 @@ fun PlayerStatusCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
-    val rankColor = when (player.rank) {
-        Rank.S -> RankSColor
-        Rank.A -> RankAColor
-        Rank.B -> RankBColor
-        Rank.C -> RankCColor
-        Rank.D -> RankDColor
-        Rank.E -> RankEColor
-    }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "player_card_scale"
+    )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(402f / 127f)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(RoundedCornerShape(10.dp))
             .background(
                 Brush.horizontalGradient(
@@ -57,7 +72,13 @@ fun PlayerStatusCard(
                     )
                 )
             )
-            .clickable { onClick() }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Button,
+                onClickLabel = "View player profile",
+                onClick = onClick
+            )
             .drawBehind {
 
                 // Outer cyan HUD border
