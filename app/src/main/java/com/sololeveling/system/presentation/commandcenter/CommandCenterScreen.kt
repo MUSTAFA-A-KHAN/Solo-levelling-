@@ -35,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
@@ -283,13 +284,33 @@ fun CommandCenterScreen(
 @Composable
 fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -> Unit, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onQuests() }) {
+        SystemPanel(
+            modifier = Modifier.weight(1f).clickable(
+                onClick = { onQuests() },
+                onClickLabel = "View quest log",
+                role = Role.Button
+            )
+        ) {
             ActionItem("QUEST LOG", "$activeCount ACTIVE", MaterialTheme.colorScheme.primary)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onLeaderboard() }, borderColor = SystemNeonPurple) {
+        SystemPanel(
+            modifier = Modifier.weight(1f).clickable(
+                onClick = { onLeaderboard() },
+                onClickLabel = "View leaderboard rankings",
+                role = Role.Button
+            ),
+            borderColor = SystemNeonPurple
+        ) {
             ActionItem("LEADERBOARD", "RANKINGS", SystemNeonPurple)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
+        SystemPanel(
+            modifier = Modifier.weight(1f).clickable(
+                onClick = { onSync() },
+                onClickLabel = "Sync health data",
+                role = Role.Button
+            ),
+            borderColor = MaterialTheme.colorScheme.secondary
+        ) {
             ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
         }
     }
