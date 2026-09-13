@@ -12,3 +12,7 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+
+## 2025-03-03 - Tactile Press Scale Feedback with GraphicsLayer
+**Learning:** Combining `MutableInteractionSource` and `collectIsPressedAsState()` with `animateFloatAsState` (using spring physics) inside `.graphicsLayer { scaleX = scale; scaleY = scale }` provides responsive press animation feedback without triggering recomposition/relayout overhead on every frame.
+**Action:** When adding tactile press feedback to custom Compose cards or surfaces, apply scale changes inside `.graphicsLayer` alongside explicit `.clickable(..., role = Role.Button, onClickLabel = ...)` for optimal draw-phase performance and screen reader accessibility.
