@@ -12,3 +12,7 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+
+## 2026-09-13 - Compose Custom Tabs Action Labels
+**Learning:** While `Modifier.selectable` properly sets the selected state and role for screen readers, it does not support an `onClickLabel` parameter directly like `Modifier.clickable` does. This leaves TalkBack users without a clear description of what clicking the tab will do.
+**Action:** When using `Modifier.selectable` for custom tabs, chain `.semantics { onClick(label = "...", action = null) }` directly after it to provide TalkBack users with a descriptive label for the tap action.
