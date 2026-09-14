@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import com.sololeveling.system.domain.model.Rank
 import com.sololeveling.system.presentation.theme.*
 
@@ -35,7 +37,9 @@ fun RankEmblem(
     }
 
     Box(
-        modifier = modifier.size(size),
+        modifier = modifier
+            .size(size)
+            .clearAndSetSemantics { contentDescription = "Rank ${rank.name}" },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {

@@ -12,3 +12,7 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+
+## 2025-03-10 - Add contentDescription to Custom Compose UI Components
+**Learning:** Custom Compose elements that visually convey information (like the `RankEmblem` which draws a hexagon and displays a rank like "S", "A", etc.) are skipped by TalkBack unless they have proper semantics. By default, `Canvas` and `Box` without text inside (or text not marked properly) might not provide meaningful context.
+**Action:** When a generic layout or Canvas visually represents semantic data (like a user's Rank), always attach `.semantics { contentDescription = "..." }` to the parent modifier to ensure screen readers announce the meaning of the graphic.
