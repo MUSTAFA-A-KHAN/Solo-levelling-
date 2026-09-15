@@ -12,3 +12,7 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+
+## 2026-09-15 - Compose Custom Button Accessibility and Tactile Feedback
+**Learning:** Custom button containers built with generic Compose modifiers like `.clickable` lack contextual context for screen readers and miss native interaction feedback when replacing standard Android buttons.
+**Action:** Always combine `Role.Button`, an explicit `onClickLabel`, and scale animation mapped to `MutableInteractionSource.collectIsPressedAsState()` to restore both accessibility semantics and immediate tactile response for custom interactive panels.
