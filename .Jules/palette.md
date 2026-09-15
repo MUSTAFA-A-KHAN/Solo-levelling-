@@ -12,3 +12,7 @@
 ## 2025-03-02 - Custom Segmented Control Selection and Color Animations
 **Learning:** Replacing `.clickable` with `.selectable` on custom tab containers ensures screen readers accurately announce `selected` status and tab role without custom semantics hacking, while `animateColorAsState` provides smooth visual feedback during state transitions.
 **Action:** For custom segmented controls, combine `.selectable(selected = isSelected, role = Role.Tab, onClick = ...)` with `animateColorAsState` for background and text colors to deliver responsive UI feedback and accessible screen reader interaction.
+
+## 2025-03-03 - Tactile Card Scale Feedback and Accessibility Semantics
+**Learning:** Adding `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState` (using `spring(stiffness = Spring.StiffnessMediumLow)`) creates a tactile press scale response on custom interactive cards, while setting `role = Role.Button` and explicit `onClickLabel` ensures TalkBack properly announces interactive functionality.
+**Action:** For interactive surface panels/cards built from generic containers, combine `.graphicsLayer { scaleX = scale; scaleY = scale }` with `.clickable(interactionSource = ..., indication = null, role = Role.Button, onClickLabel = ...)` for tactile responsiveness and screen reader accessibility.
