@@ -36,7 +36,7 @@ fun AwakeningScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .clickable {
+            .clickable(onClickLabel = "Trigger awakening process", role = androidx.compose.ui.semantics.Role.Button) {
                 if (step == 1) step = 2
                 else if (step == 2) step = 3
                 else if (step == 3) onAwakeningComplete()

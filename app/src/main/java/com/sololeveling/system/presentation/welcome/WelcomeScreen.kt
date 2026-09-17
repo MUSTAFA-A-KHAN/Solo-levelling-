@@ -153,7 +153,7 @@ private fun WelcomeActionButton(
         SystemPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = enabled, onClick = onClick),
+                .clickable(enabled = enabled, onClick = onClick, onClickLabel = title, role = androidx.compose.ui.semantics.Role.Button),
             borderColor = borderColor
         ) {
             Column(

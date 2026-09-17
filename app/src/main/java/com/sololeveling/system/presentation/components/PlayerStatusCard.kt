@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import com.sololeveling.system.R
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Rank
@@ -57,7 +58,11 @@ fun PlayerStatusCard(
                     )
                 )
             )
-            .clickable { onClick() }
+            .clickable(
+                onClick = onClick,
+                onClickLabel = "View player profile details",
+                role = Role.Button
+            )
             .drawBehind {
 
                 // Outer cyan HUD border
