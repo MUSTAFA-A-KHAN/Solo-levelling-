@@ -50,7 +50,6 @@ import com.sololeveling.system.presentation.components.HolographicProgressBar
 import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.components.PlayerStatusCard
 import com.sololeveling.system.presentation.theme.*
-import androidx.compose.ui.semantics.Role
 
 @Preview(
     showBackground = true,
@@ -76,8 +75,8 @@ fun CommandCenterScreenPreview() {
             HealthOverviewPanel(DailyHealthData(steps = 8421, workoutMinutes = 47, caloriesBurned = 426.0, sleepMinutes = 452), weeklySteps = 52340, totalSteps = 184230)
             Spacer(Modifier.height(24.dp))
             HydrationPanel(
-                current = 1.2, 
-                goal = 2.0, 
+                current = 1.2,
+                goal = 2.0,
                 reminderEnabled = true,
                 reminderInterval = 60,
                 onAddWater = {},
@@ -284,22 +283,13 @@ fun CommandCenterScreen(
 @Composable
 fun DashboardActions(activeCount: Int, onQuests: () -> Unit, onLeaderboard: () -> Unit, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SystemPanel(modifier = Modifier.weight(1f).clickable(
-            onClickLabel = "View active quests",
-            role = Role.Button
-        ) { onQuests() }) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable { onQuests() }) {
             ActionItem("QUEST LOG", "$activeCount ACTIVE", MaterialTheme.colorScheme.primary)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable(
-            onClickLabel = "View leaderboard",
-            role = Role.Button
-        ) { onLeaderboard() }, borderColor = SystemNeonPurple) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable { onLeaderboard() }, borderColor = SystemNeonPurple) {
             ActionItem("LEADERBOARD", "RANKINGS", SystemNeonPurple)
         }
-        SystemPanel(modifier = Modifier.weight(1f).clickable(
-            onClickLabel = "Sync health data",
-            role = Role.Button
-        ) { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
+        SystemPanel(modifier = Modifier.weight(1f).clickable { onSync() }, borderColor = MaterialTheme.colorScheme.secondary) {
             ActionItem("SYNC DATA", "HEALTH", MaterialTheme.colorScheme.secondary)
         }
     }
@@ -386,17 +376,17 @@ fun HydrationPanel(
                     )
                 }
             }
-            
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
                  Text(text = "${String.format("%.1f", current)} / ${String.format("%.1f", goal)} L", style = MaterialTheme.typography.titleMedium, color = Color.White)
                  if (reminderEnabled) {
                      Text(text = "System alerts every ${reminderInterval}m", style = MaterialTheme.typography.labelSmall, color = SystemNeonBlue.copy(alpha = 0.7f))
                  }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
             HolographicProgressBar(progress = (current / goal).toFloat().coerceIn(0f, 1f), color = SystemNeonBlue)
-            
+
             if (reminderEnabled) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = "ADJUST ALERT FREQUENCY", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
@@ -411,7 +401,7 @@ fun HydrationPanel(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 HydrationButton(label = "+250ml", onClick = { onAddWater(0.25) }, modifier = Modifier.weight(1f))
@@ -431,14 +421,14 @@ fun HydrationPanel(
 
 @Composable
 fun HydrationButton(
-    label: String, 
-    onClick: () -> Unit, 
+    label: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isSelected: Boolean = false
 ) {
     val containerColor = if (isSelected) SystemNeonBlue.copy(alpha = 0.3f) else SystemNeonBlue.copy(alpha = 0.1f)
     val borderColor = if (isSelected) SystemNeonBlue else SystemNeonBlue.copy(alpha = 0.5f)
-    
+
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(containerColor = containerColor, contentColor = SystemNeonBlue),
@@ -483,7 +473,7 @@ fun AITerminalPanel(response: String, onSendCommand: (String) -> Unit) {
                     placeholder = { Text("Enter command...", style = MaterialTheme.typography.bodySmall, color = Color.Gray) },
                     textStyle = MaterialTheme.typography.bodySmall
                 )
-                TextButton(onClick = { 
+                TextButton(onClick = {
                     onSendCommand(text)
                     text = ""
                 }) {
