@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -107,6 +109,9 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = false }
                             )
+                            .semantics {
+                                onClick(label = "Show active quests", action = null)
+                            }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -127,6 +132,9 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = true }
                             )
+                            .semantics {
+                                onClick(label = "Show completed quests", action = null)
+                            }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -266,7 +274,11 @@ fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = { onAddProgress(100.0) },
-                        modifier = Modifier.align(Alignment.End),
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .semantics {
+                                onClick(label = "Add 100 progress to ${quest.title}", action = null)
+                            },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.primary
