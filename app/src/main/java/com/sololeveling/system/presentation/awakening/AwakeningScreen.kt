@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
 import com.sololeveling.system.R
 import kotlinx.coroutines.delay
 
@@ -36,7 +37,7 @@ fun AwakeningScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .clickable {
+            .clickable(onClickLabel = "Progress sequence", role = Role.Button) {
                 if (step == 1) step = 2
                 else if (step == 2) step = 3
                 else if (step == 3) onAwakeningComplete()
