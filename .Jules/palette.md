@@ -16,3 +16,9 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+## 2025-03-03 - Compose Custom Tabs Accessibility
+**Learning:** In Jetpack Compose,  does not take an  parameter directly. Custom interactive elements (like segmented tabs) built using generic containers and  lack specific action descriptions.
+**Action:** When creating custom tabs in Jetpack Compose, always enhance  with explicit semantic metadata by chaining  after  to provide a custom click action description to TalkBack screen readers.
+## 2025-03-03 - Compose Custom Tabs Accessibility
+**Learning:** In Jetpack Compose, `Modifier.selectable` does not take an `onClickLabel` parameter directly. Custom interactive elements (like segmented tabs) built using generic containers and `.selectable` lack specific action descriptions.
+**Action:** When creating custom tabs in Jetpack Compose, always enhance `.selectable` with explicit semantic metadata by chaining `.semantics { onClick(label = "...", action = null) }` after `.selectable` to provide a custom click action description to TalkBack screen readers.

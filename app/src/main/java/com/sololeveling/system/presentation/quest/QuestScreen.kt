@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -107,6 +109,7 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = false }
                             )
+                            .semantics { onClick(label = "View active quests", action = null) }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -127,6 +130,7 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = true }
                             )
+                            .semantics { onClick(label = "View completed quests", action = null) }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
