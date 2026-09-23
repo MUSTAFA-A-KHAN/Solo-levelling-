@@ -1,8 +1,17 @@
 package com.sololeveling.system.presentation.quest
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,7 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -107,6 +119,7 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = false }
                             )
+                            .semantics { onClick(label = "Show active quests", action = null) }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -127,6 +140,7 @@ fun QuestScreen(
                                 role = Role.Tab,
                                 onClick = { showCompleted = true }
                             )
+                            .semantics { onClick(label = "Show completed quests", action = null) }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -141,22 +155,30 @@ fun QuestScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val displayList = if (showCompleted) completedQuests else activeQuests
+                AnimatedContent(
+                    targetState = showCompleted,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(220))
+                    },
+                    label = "quest_list_transition"
+                ) { isCompletedSelected ->
+                    val displayList = if (isCompletedSelected) completedQuests else activeQuests
 
-                if (displayList.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
-                    }
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 32.dp)
-                    ) {
-                        items(displayList) { quest ->
-                            QuestItem(
-                                quest = quest,
-                                onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
-                            )
+                    if (displayList.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 32.dp)
+                        ) {
+                            items(displayList, key = { it.id }) { quest ->
+                                QuestItem(
+                                    quest = quest,
+                                    onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                                )
+                            }
                         }
                     }
                 }
@@ -264,9 +286,24 @@ fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
 
                 if (!quest.isCompleted) {
                     Spacer(modifier = Modifier.height(12.dp))
+                    val buttonInteractionSource = remember { MutableInteractionSource() }
+                    val isButtonPressed by buttonInteractionSource.collectIsPressedAsState()
+                    val buttonScale by animateFloatAsState(
+                        targetValue = if (isButtonPressed) 0.94f else 1f,
+                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        label = "quest_button_scale"
+                    )
+
                     Button(
                         onClick = { onAddProgress(100.0) },
-                        modifier = Modifier.align(Alignment.End),
+                        interactionSource = buttonInteractionSource,
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .graphicsLayer {
+                                scaleX = buttonScale
+                                scaleY = buttonScale
+                            }
+                            .semantics { onClick(label = "Add progress to ${quest.title}", action = null) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.primary
