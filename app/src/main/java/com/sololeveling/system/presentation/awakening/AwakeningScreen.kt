@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -36,7 +37,7 @@ fun AwakeningScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .clickable {
+            .clickable(onClickLabel = "Proceed to next step", role = Role.Button) {
                 if (step == 1) step = 2
                 else if (step == 2) step = 3
                 else if (step == 3) onAwakeningComplete()
