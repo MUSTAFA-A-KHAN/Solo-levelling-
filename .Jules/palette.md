@@ -16,3 +16,7 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+
+## 2025-03-03 - Tactile Feedback and Accessibility for Welcome Buttons
+**Learning:** Generic buttons built using custom containers (`SystemPanel`) with a simple `.clickable` feel static and lack semantic meaning for screen readers. Overriding the default ripple with a spring-based scale animation and explicit roles creates a much more modern, responsive feel.
+**Action:** When building interactive UI elements in Compose, enhance the `.clickable` modifier with a `MutableInteractionSource` to drive `animateFloatAsState(spring())` scaling feedback, while simultaneously supplying `role = Role.Button` and `onClickLabel` for clear screen reader context.
