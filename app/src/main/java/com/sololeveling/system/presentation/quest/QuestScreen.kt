@@ -1,5 +1,6 @@
 package com.sololeveling.system.presentation.quest
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -141,22 +142,27 @@ fun QuestScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val displayList = if (showCompleted) completedQuests else activeQuests
+                AnimatedContent(
+                    targetState = showCompleted,
+                    label = "quest_list_transition"
+                ) { isCompleted ->
+                    val displayList = if (isCompleted) completedQuests else activeQuests
 
-                if (displayList.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
-                    }
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 32.dp)
-                    ) {
-                        items(displayList) { quest ->
-                            QuestItem(
-                                quest = quest,
-                                onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
-                            )
+                    if (displayList.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 32.dp)
+                        ) {
+                            items(displayList, key = { it.id }) { quest ->
+                                QuestItem(
+                                    quest = quest,
+                                    onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                                )
+                            }
                         }
                     }
                 }
