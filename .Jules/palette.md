@@ -16,3 +16,6 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+## 2025-03-05 - Optimize Screen Reader Phrasing for Clickable Containers
+**Learning:** When adding `onClickLabel` properties to generic containers (like `Box` or `Row`) using Jetpack Compose's `.clickable` modifier, screen reader announcements can feel verbose or overly specific if the phrasing includes personal pronouns or redundant words (e.g., 'View my profile' instead of 'View profile').
+**Action:** Use concise, action-oriented phrasing for accessibility labels, ensuring they generalize well across different contexts and deliver a cleaner, faster experience for screen reader users.
