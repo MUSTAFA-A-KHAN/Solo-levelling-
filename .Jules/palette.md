@@ -16,3 +16,7 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+
+## 2025-03-04 - Smooth Tab List Transitions with AnimatedContent and Custom Selectable Semantics
+**Learning:** Toggling between tab views in LazyColumn without animated content boundaries creates abrupt visual pops that disorient users, while `.selectable` on generic containers omits explicit action descriptions for screen readers.
+**Action:** Wrap tab list containers in `AnimatedContent` with crossfade/slide transitions, supply explicit keys (`key = { item.id }`) in `LazyColumn.items` to retain identity, and append `.semantics { onClick(label = "...") }` after `.selectable` to inform TalkBack users of the exact tab action.
