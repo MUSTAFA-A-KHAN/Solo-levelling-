@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -36,7 +37,10 @@ fun AwakeningScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .clickable {
+            .clickable(
+                onClickLabel = "Progress awakening sequence",
+                role = Role.Button
+            ) {
                 if (step == 1) step = 2
                 else if (step == 2) step = 3
                 else if (step == 3) onAwakeningComplete()

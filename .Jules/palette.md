@@ -16,3 +16,7 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+
+## 2024-05-18 - Missing Role Imports when modifying semantics
+**Learning:** When using automated replacements to add UI semantics like `Role.Button` to files, it is easy to miss adding the required `import androidx.compose.ui.semantics.Role` statement, which leads to silent compilation failures if only partial builds are run.
+**Action:** Always use `grep` or code formatting tools to ensure `import androidx.compose.ui.semantics.Role` is explicitly present in any file where semantic roles are introduced.
