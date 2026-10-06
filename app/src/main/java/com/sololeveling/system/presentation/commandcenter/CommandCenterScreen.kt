@@ -555,7 +555,16 @@ fun ConnectionStatusIndicator(status: CommandCenterViewModel.ConnectionStatus, o
         Box(modifier = Modifier.size(if (dotPulse) 12.dp else 10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(animatedDotColor))
         Spacer(modifier = Modifier.width(8.dp))
         if (shouldShowError && errorMessage != null) {
-            Text(text = "SYNC ERROR: $errorMessage", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = StatusError, modifier = Modifier.clickable { onDismissError() })
+            Text(
+                text = "SYNC ERROR: $errorMessage",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = StatusError,
+                modifier = Modifier.clickable(
+                    role = Role.Button,
+                    onClickLabel = "Dismiss error",
+                    onClick = { onDismissError() }
+                )
+            )
         } else {
             Text(text = "CLOUD CONNECTED", style = MaterialTheme.typography.labelMedium, color = if (dotPulse) StatusWarning else StatusSuccess)
         }

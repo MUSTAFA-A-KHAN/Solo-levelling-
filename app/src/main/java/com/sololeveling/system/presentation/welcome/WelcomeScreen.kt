@@ -9,6 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -133,6 +140,14 @@ private fun WelcomeActionButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "button_scale"
+    )
+
     if (isLoading) {
         SystemPanel(
             modifier = Modifier.fillMaxWidth(),
@@ -153,7 +168,18 @@ private fun WelcomeActionButton(
         SystemPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = enabled, onClick = onClick),
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick,
+                    role = Role.Button,
+                    onClickLabel = title,
+                    interactionSource = interactionSource,
+                    indication = null
+                ),
             borderColor = borderColor
         ) {
             Column(
