@@ -16,3 +16,7 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+
+## 2025-03-04 - Tabbed List State Transitions with AnimatedContent
+**Learning:** Abrupt list switching between tab states creates visual layout pops. Wrapping the list container in `AnimatedContent` combined with supplying explicit `key` parameters to `LazyColumn.items` delivers smooth crossfade animations and retains item identity during tab toggles.
+**Action:** When switching list states or tabs in Jetpack Compose, use `AnimatedContent(targetState = tabState)` with `fadeIn` + `fadeOut` and `items(list, key = { it.id })` for polished UI transitions.
