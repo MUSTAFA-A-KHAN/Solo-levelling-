@@ -256,9 +256,10 @@ fun LeaderboardItem(
 
     val panelBorder = if (isSelf) SystemNeonBlue else podiumColor
 
+    val displayName = entry.displayName.takeIf { it.isNotBlank() } ?: "Hunter ${entry.uid.take(6)}"
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }, role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "View $displayName profile") else Modifier)
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
