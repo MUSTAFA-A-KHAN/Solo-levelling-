@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.Role
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sololeveling.system.domain.model.LeaderboardEntry
 import com.sololeveling.system.domain.model.Rank
@@ -129,7 +130,10 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(
+                                            onClickLabel = "Link account",
+                                            role = Role.Button
+                                        ) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -256,9 +260,15 @@ fun LeaderboardItem(
 
     val panelBorder = if (isSelf) SystemNeonBlue else podiumColor
 
+    val displayName = entry.displayName.takeIf { it.isNotBlank() } ?: "HUNTER ${entry.uid.take(6)}"
+
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(if (onClick != null) Modifier.clickable(
+            onClickLabel = "View $displayName profile",
+            role = Role.Button,
+            onClick = { onClick() }
+        ) else Modifier)
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
@@ -305,7 +315,7 @@ fun LeaderboardItem(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = entry.displayName.takeIf { it.isNotBlank() } ?: "HUNTER ${entry.uid.take(6)}",
+                            text = displayName,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = if (isSelf) SystemNeonBlue else MaterialTheme.colorScheme.onSurface
                         )
