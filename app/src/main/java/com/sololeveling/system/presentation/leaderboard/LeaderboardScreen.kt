@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,7 @@ import com.sololeveling.system.presentation.theme.StatusWarning
 import com.sololeveling.system.presentation.theme.SystemNeonBlue
 import com.sololeveling.system.presentation.theme.SystemNeonPurple
 import com.sololeveling.system.presentation.theme.SystemNeonPurpleVariant
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,7 +131,10 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(
+                                            onClickLabel = "Navigate to profile to link account",
+                                            role = Role.Button
+                                        ) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -258,7 +263,11 @@ fun LeaderboardItem(
 
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(if (onClick != null) Modifier.clickable(
+            onClickLabel = "View hunter profile",
+            role = Role.Button,
+            onClick = { onClick() }
+        ) else Modifier)
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
