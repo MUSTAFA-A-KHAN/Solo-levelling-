@@ -1,7 +1,13 @@
 package com.sololeveling.system.presentation.quest
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -141,22 +147,39 @@ fun QuestScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val displayList = if (showCompleted) completedQuests else activeQuests
-
-                if (displayList.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
-                    }
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 32.dp)
-                    ) {
-                        items(displayList) { quest ->
-                            QuestItem(
-                                quest = quest,
-                                onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                AnimatedContent(
+                    targetState = showCompleted,
+                    transitionSpec = {
+                        if (targetState) {
+                            (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
+                                slideOutHorizontally { width -> -width } + fadeOut())
+                        } else {
+                            (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
+                                slideOutHorizontally { width -> width } + fadeOut())
+                        }
+                    },
+                    label = "quest_tab_transition"
+                ) { isCompleted ->
+                    val currentList = if (isCompleted) completedQuests else activeQuests
+                    if (currentList.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                "NO QUESTS AVAILABLE",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.titleMedium
                             )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 32.dp)
+                        ) {
+                            items(currentList, key = { it.id }) { quest ->
+                                QuestItem(
+                                    quest = quest,
+                                    onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                                )
+                            }
                         }
                     }
                 }
