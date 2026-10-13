@@ -17,12 +17,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
@@ -46,17 +46,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.PermissionController
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.flow.collectLatest
+import com.sololeveling.system.R
 import com.sololeveling.system.domain.model.Player
 import com.sololeveling.system.domain.model.Quest
-import com.sololeveling.system.R
 import com.sololeveling.system.domain.model.Rank
 import com.sololeveling.system.presentation.components.AnimatedFireEffect
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.HolographicProgressBar
-import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.components.PlayerStatusCard
+import com.sololeveling.system.presentation.components.SystemPanel
 import com.sololeveling.system.presentation.theme.*
+import kotlinx.coroutines.flow.collectLatest
+
 
 @Preview(
     showBackground = true,
@@ -555,7 +556,10 @@ fun ConnectionStatusIndicator(status: CommandCenterViewModel.ConnectionStatus, o
         Box(modifier = Modifier.size(if (dotPulse) 12.dp else 10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(animatedDotColor))
         Spacer(modifier = Modifier.width(8.dp))
         if (shouldShowError && errorMessage != null) {
-            Text(text = "SYNC ERROR: $errorMessage", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = StatusError, modifier = Modifier.clickable { onDismissError() })
+            Text(text = "SYNC ERROR: $errorMessage", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = StatusError, modifier = Modifier.clickable(
+                onClickLabel = "Dismiss sync error",
+                role = Role.Button
+            ) { onDismissError() })
         } else {
             Text(text = "CLOUD CONNECTED", style = MaterialTheme.typography.labelMedium, color = if (dotPulse) StatusWarning else StatusSuccess)
         }

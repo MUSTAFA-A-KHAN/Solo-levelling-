@@ -10,16 +10,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sololeveling.system.R
 import com.sololeveling.system.presentation.components.AtmosphericBackground
 import com.sololeveling.system.presentation.components.SystemPanel
+import com.sololeveling.system.presentation.theme.StatusError
 import com.sololeveling.system.presentation.theme.SystemNeonBlue
 import com.sololeveling.system.presentation.theme.SystemNeonPurple
-import com.sololeveling.system.presentation.theme.StatusError
 import kotlinx.coroutines.launch
+
 
 @Composable
 fun WelcomeScreen(
@@ -153,7 +155,12 @@ private fun WelcomeActionButton(
         SystemPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = enabled, onClick = onClick),
+                .clickable(
+                    enabled = enabled,
+                    onClickLabel = "Select role: ${title}",
+                    role = Role.Button,
+                    onClick = onClick
+                ),
             borderColor = borderColor
         ) {
             Column(
