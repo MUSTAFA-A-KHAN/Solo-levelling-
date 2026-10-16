@@ -1,7 +1,11 @@
 package com.sololeveling.system.presentation.quest
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -141,22 +147,30 @@ fun QuestScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val displayList = if (showCompleted) completedQuests else activeQuests
+                AnimatedContent(
+                    targetState = showCompleted,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(220))
+                    },
+                    label = "questTabContent"
+                ) { isCompletedTab ->
+                    val displayList = if (isCompletedTab) completedQuests else activeQuests
 
-                if (displayList.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
-                    }
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 32.dp)
-                    ) {
-                        items(displayList) { quest ->
-                            QuestItem(
-                                quest = quest,
-                                onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
-                            )
+                    if (displayList.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("NO QUESTS AVAILABLE", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 32.dp)
+                        ) {
+                            items(displayList, key = { it.id }) { quest ->
+                                QuestItem(
+                                    quest = quest,
+                                    onAddProgress = { amount -> viewModel.addProgress(quest.id, amount) }
+                                )
+                            }
                         }
                     }
                 }
@@ -266,7 +280,11 @@ fun QuestItem(quest: Quest, onAddProgress: (Double) -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = { onAddProgress(100.0) },
-                        modifier = Modifier.align(Alignment.End),
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .semantics {
+                                onClick(label = "Add progress to ${quest.title}", action = null)
+                            },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.primary
