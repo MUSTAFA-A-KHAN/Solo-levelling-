@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -258,7 +259,18 @@ fun LeaderboardItem(
 
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(
+            if (onClick != null) {
+                val hunterName = entry.displayName.takeIf { it.isNotBlank() } ?: "Hunter ${entry.uid.take(6)}"
+                Modifier.clickable(
+                    onClick = onClick,
+                    onClickLabel = "View profile of $hunterName",
+                    role = Role.Button
+                )
+            } else {
+                Modifier
+            }
+        )
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
