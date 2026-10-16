@@ -16,3 +16,7 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+
+## 2025-03-05 - Dynamic Accessibility Labels in Leaderboards
+**Learning:** Hardcoded accessibility labels (e.g., just `Role.Button` and implicit click action) on identical repetitive items in dynamic lists (like leaderboards) fail to provide distinguishing context for screen reader users, causing confusion about which item is being interacted with.
+**Action:** When assigning accessibility labels (`onClickLabel`) to elements within dynamic lists, always incorporate dynamic data (e.g., the specific item or player name) rather than hardcoded generic text to provide accurate and distinguishable context.
