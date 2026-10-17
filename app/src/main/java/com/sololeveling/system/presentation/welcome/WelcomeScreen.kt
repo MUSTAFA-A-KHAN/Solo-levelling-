@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -153,7 +154,12 @@ private fun WelcomeActionButton(
         SystemPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = enabled, onClick = onClick),
+                .clickable(
+                    enabled = enabled,
+                    onClickLabel = title,
+                    role = Role.Button,
+                    onClick = onClick
+                ),
             borderColor = borderColor
         ) {
             Column(

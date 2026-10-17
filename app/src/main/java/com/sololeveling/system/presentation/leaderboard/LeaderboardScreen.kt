@@ -2,6 +2,7 @@ package com.sololeveling.system.presentation.leaderboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -129,7 +130,10 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(
+                                            onClickLabel = "Navigate to profile to link account",
+                                            role = Role.Button
+                                        ) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -258,7 +262,17 @@ fun LeaderboardItem(
 
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(
+            if (onClick != null) {
+                Modifier.clickable(
+                    onClick = { onClick() },
+                    onClickLabel = "View profile of ${entry.displayName.takeIf { it.isNotBlank() } ?: "HUNTER"}",
+                    role = Role.Button
+                )
+            } else {
+                Modifier
+            }
+        )
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
