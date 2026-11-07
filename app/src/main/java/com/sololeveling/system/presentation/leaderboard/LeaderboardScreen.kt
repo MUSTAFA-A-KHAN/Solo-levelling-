@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -129,7 +130,10 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(
+                                            onClickLabel = "Link your account to view global leaderboard",
+                                            role = Role.Button
+                                        ) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -256,9 +260,19 @@ fun LeaderboardItem(
 
     val panelBorder = if (isSelf) SystemNeonBlue else podiumColor
 
+    val playerName = entry.displayName.takeIf { it.isNotBlank() } ?: "HUNTER ${entry.uid.take(6)}"
+
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(
+            if (onClick != null) {
+                Modifier.clickable(
+                    onClickLabel = "View $playerName profile",
+                    role = Role.Button,
+                    onClick = { onClick() }
+                )
+            } else Modifier
+        )
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
