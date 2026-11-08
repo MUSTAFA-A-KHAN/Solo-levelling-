@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -129,7 +130,10 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(
+                                            onClickLabel = "Link account",
+                                            role = Role.Button
+                                        ) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -256,9 +260,17 @@ fun LeaderboardItem(
 
     val panelBorder = if (isSelf) SystemNeonBlue else podiumColor
 
+    val hunterName = entry.displayName.takeIf { it.isNotBlank() } ?: "HUNTER ${entry.uid.take(6)}"
+
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(
+            if (onClick != null) Modifier.clickable(
+                onClickLabel = "View profile for $hunterName",
+                role = Role.Button,
+                onClick = { onClick() }
+            ) else Modifier
+        )
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
