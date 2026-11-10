@@ -16,3 +16,6 @@
 ## 2025-03-03 - Hero Card Tactile Press Feedback and Accessibility
 **Learning:** Interactive hero cards built with custom layout containers often lack tactile press feedback and screen reader role context, making user interactions feel static and ambiguous to accessibility tools like TalkBack.
 **Action:** Use `MutableInteractionSource` with `collectIsPressedAsState()` and `animateFloatAsState(spring(stiffness = Spring.StiffnessMediumLow))` paired with `.graphicsLayer { scaleX = scale; scaleY = scale }` and `.clickable(role = Role.Button, onClickLabel = "...")` to provide immediate, responsive physical feedback and clear accessibility role description.
+## 2025-04-18 - Accessibility semantics on generic containers
+**Learning:** TalkBack screen readers genericize `Modifier.clickable` actions on standard layout blocks (like `Box` or `Row`), missing necessary contextual clues on custom-built interactive UI components (like list items or custom panels).
+**Action:** When creating custom layout containers, chain explicit labels into `clickable`, using semantic indicators like `role = Role.Button` and `onClickLabel` with clear action phrasing to replace the basic click description.
