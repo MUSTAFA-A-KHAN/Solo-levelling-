@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -129,7 +130,10 @@ fun LeaderboardScreen(
                                     modifier = Modifier
                                         .background(SystemNeonBlue.copy(alpha = 0.15f))
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onNavigateToProfile() }
+                                        .clickable(
+                                            onClickLabel = "Link account",
+                                            role = Role.Button
+                                        ) { onNavigateToProfile() }
                                         .padding(vertical = 10.dp, horizontal = 16.dp)
                                 ) {
                                     Text(
@@ -258,7 +262,13 @@ fun LeaderboardItem(
 
     val itemModifier = Modifier
         .fillMaxWidth()
-        .then(if (onClick != null) Modifier.clickable(onClick = { onClick() }) else Modifier)
+        .then(
+            if (onClick != null) Modifier.clickable(
+                onClick = { onClick() },
+                onClickLabel = "View profile of ${entry.displayName.takeIf { it.isNotBlank() } ?: "hunter"}",
+                role = Role.Button
+            ) else Modifier
+        )
         .clip(RoundedCornerShape(20.dp))
 
     SystemPanel(
