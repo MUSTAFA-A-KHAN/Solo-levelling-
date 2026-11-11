@@ -2,14 +2,21 @@ package com.sololeveling.system.presentation.welcome
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -95,6 +102,7 @@ fun WelcomeScreen(
             WelcomeActionButton(
                 title = "SIGN IN WITH GOOGLE",
                 subtitle = "Sync progress across devices",
+                onClickLabel = "Sign in with Google",
                 borderColor = SystemNeonBlue,
                 isLoading = isLoading,
                 onClick = { viewModel.onSignInWithGoogle() }
@@ -105,6 +113,7 @@ fun WelcomeScreen(
             WelcomeActionButton(
                 title = "CONTINUE WITHOUT SIGNING IN",
                 subtitle = "Play locally, sync later",
+                onClickLabel = "Continue without signing in",
                 borderColor = SystemNeonPurple,
                 isLoading = false,
                 enabled = !isLoading,
@@ -128,11 +137,20 @@ fun WelcomeScreen(
 private fun WelcomeActionButton(
     title: String,
     subtitle: String,
+    onClickLabel: String,
     borderColor: androidx.compose.ui.graphics.Color,
     isLoading: Boolean,
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && enabled && !isLoading) 0.96f else 1.0f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "welcome_button_scale"
+    )
+
     if (isLoading) {
         SystemPanel(
             modifier = Modifier.fillMaxWidth(),
@@ -153,7 +171,18 @@ private fun WelcomeActionButton(
         SystemPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = enabled, onClick = onClick),
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClickLabel = onClickLabel,
+                    onClick = onClick
+                ),
             borderColor = borderColor
         ) {
             Column(
